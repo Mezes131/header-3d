@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import { CanvasTexture, Color, Float32BufferAttribute, Shape, ShapeGeometry } from 'three';
-import { RoundedBox } from '@react-three/drei';
+import { CanvasTexture, Color, ExtrudeGeometry, Float32BufferAttribute, Shape, ShapeGeometry } from 'three';
 import { CARD_DEPTH, CARD_HEIGHT, CARD_WIDTH } from '../constants/layout';
 
 // RoundedBox takes world units, so convert the 60px design radius to scene space.
 const CARD_CORNER_RADIUS = (60 / 512) * CARD_WIDTH;
 // Keep the face radius just shy of the shell radius to avoid z-fighting.
 const FACE_CORNER_RADIUS = CARD_CORNER_RADIUS - 0.01;
+
+const FACE_INSET = 0.015;
+const SHELL_FRAME_THICKNESS = 0.04;
 
 const generationColors = {
   0: '#7a64ff',
@@ -85,6 +87,37 @@ function drawGenderIcon(ctx, gender) {
   }
 
   ctx.restore();
+}
+
+function createRoundedRectShape(width, height, radius) {
+  const hw = width / 2;
+  const hh = height / 2;
+  const r = Math.min(radius, Math.min(hw, hh));
+  const shape = new Shape();
+  shape.moveTo(-hw + r, -hh);
+  shape.lineTo(hw - r, -hh);
+  shape.quadraticCurveTo(hw, -hh, hw, -hh + r);
+  shape.lineTo(hw, hh - r);
+  shape.quadraticCurveTo(hw, hh, hw - r, hh);
+  shape.lineTo(-hw + r, hh);
+  shape.quadraticCurveTo(-hw, hh, -hw, hh - r);
+  shape.lineTo(-hw, -hh + r);
+  shape.quadraticCurveTo(-hw, -hh, -hw + r, -hh);
+  shape.closePath();
+  return shape;
+}
+
+function buildShellGeometry() {
+  const outer = createRoundedRectShape(CARD_WIDTH, CARD_HEIGHT, CARD_CORNER_RADIUS);
+  const innerWidth = CARD_WIDTH - SHELL_FRAME_THICKNESS * 2;
+  const innerHeight = CARD_HEIGHT - SHELL_FRAME_THICKNESS * 2;
+  const innerRadius = Math.max(FACE_CORNER_RADIUS - 0.005, 0.01);
+  const inner = createRoundedRectShape(innerWidth, innerHeight, innerRadius);
+  outer.holes.push(inner);
+
+  const geometry = new ExtrudeGeometry(outer, { depth: CARD_DEPTH, bevelEnabled: false, steps: 1 });
+  geometry.translate(0, 0, -CARD_DEPTH / 2);
+  return geometry;
 }
 
 // Paints the flat 2D layout (background, texts, icons) into an offscreen texture.
@@ -177,19 +210,7 @@ export default function PersonCard({ person }) {
     const width = CARD_WIDTH;
     const height = CARD_HEIGHT;
     const radius = Math.min(FACE_CORNER_RADIUS, Math.min(width, height) / 2 - 0.01);
-    const hw = width / 2;
-    const hh = height / 2;
-    const shape = new Shape();
-    shape.moveTo(-hw + radius, -hh);
-    shape.lineTo(hw - radius, -hh);
-    shape.quadraticCurveTo(hw, -hh, hw, -hh + radius);
-    shape.lineTo(hw, hh - radius);
-    shape.quadraticCurveTo(hw, hh, hw - radius, hh);
-    shape.lineTo(-hw + radius, hh);
-    shape.quadraticCurveTo(-hw, hh, -hw, hh - radius);
-    shape.lineTo(-hw, -hh + radius);
-    shape.quadraticCurveTo(-hw, -hh, -hw + radius, -hh);
-    shape.closePath();
+    const shape = createRoundedRectShape(width, height, radius);
     const geometry = new ShapeGeometry(shape, 32);
     geometry.computeBoundingBox();
     const { min, max } = geometry.boundingBox;
@@ -207,17 +228,24 @@ export default function PersonCard({ person }) {
     return geometry;
   }, []);
 
+  const shellGeometry = useMemo(() => buildShellGeometry(), []);
+
+  // Back face geometry (simple rounded rectangle, same size as front face)
+  const backFaceGeometry = useMemo(() => {
+    const width = CARD_WIDTH;
+    const height = CARD_HEIGHT;
+    const radius = Math.min(FACE_CORNER_RADIUS, Math.min(width, height) / 2 - 0.01);
+    const shape = createRoundedRectShape(width, height, radius);
+    return new ShapeGeometry(shape, 32);
+  }, []);
+
   const groupScale = hovered ? 1.04 : 1;
   const zLift = hovered ? 0.08 : 0;
 
   return (
     <group position={[person.position[0], person.position[1], person.position[2] + zLift]} scale={groupScale}>
-      <RoundedBox
-        args={[CARD_WIDTH, CARD_HEIGHT, CARD_DEPTH]}
-        radius={CARD_CORNER_RADIUS}
-        smoothness={6}
-        bevelSegments={2}
-        creaseAngle={0.4}
+      <mesh
+        geometry={shellGeometry}
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
@@ -231,10 +259,10 @@ export default function PersonCard({ person }) {
           emissive={hovered ? emissive : new Color('#000000')}
           emissiveIntensity={hovered ? 0.15 : 0}
         />
-      </RoundedBox>
+      </mesh>
       <mesh
         geometry={faceGeometry}
-        position={[0, 0, CARD_DEPTH / 2 + 0.005]}
+        position={[0, 0, CARD_DEPTH / 2 - FACE_INSET]}
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
@@ -246,6 +274,25 @@ export default function PersonCard({ person }) {
           roughness={0.2}
           metalness={0.05}
           transparent
+        />
+      </mesh>
+      <mesh
+        geometry={backFaceGeometry}
+        position={[0, 0, -CARD_DEPTH / 2 + FACE_INSET]}
+        rotation={[0, Math.PI, 0]}
+        scale={hovered ? 1.05 : 1}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+        }}
+        onPointerOut={() => setHovered(false)}  
+      >
+        <meshStandardMaterial
+          color={genderPalette[person.gender].shell}
+          roughness={0.4}
+          metalness={0.1}
+          emissive={hovered ? emissive : new Color('#000000')}
+          emissiveIntensity={hovered ? 0.2 : 0}
         />
       </mesh>
       <mesh position={[0, -(CARD_HEIGHT / 2) - 0.02, 0]}>
