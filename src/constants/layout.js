@@ -17,13 +17,13 @@ export const HEART_CENTER = [0, 1.1, 0];
 export const HEART_CONNECT_Y = HEART_CENTER[1] - HEART_BADGE_RADIUS;
 
 export const CAMERA_CONFIG = {
-  position: [0, 0.6, 9],
+  position: [0, 0.6, 20],
   fov: 55,
 };
 
 export const CONTROLS_CONFIG = {
   minDistance: 5,
-  maxDistance: 12,
+  maxDistance: 30,
   enablePan: false,
   target: [0, 0.3, 0],
 };
