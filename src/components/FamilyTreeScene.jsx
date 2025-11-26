@@ -7,6 +7,7 @@ import HeartBadge from './HeartBadge';
 import Floor from './Floor';
 import StreetLight from './StreetLight';
 import BrickWall from './BrickWall';
+import WindParticles from './WindParticles';
 import { people, links } from '../data/family';
 import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layout';
 
@@ -27,6 +28,7 @@ function SceneContents() {
       {/* Décor de la scène */}
       <Floor />
       <StreetLight />
+      <WindParticles />
       
       {/* Murs de brique */}
       {/* Mur arrière */}
