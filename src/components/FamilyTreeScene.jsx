@@ -8,6 +8,7 @@ import Floor from './Floor';
 import StreetLight from './StreetLight';
 import BrickWall from './BrickWall';
 import WindParticles from './WindParticles';
+import BounceAnimator from './BounceAnimator';
 import { people, links } from '../data/family';
 import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layout';
 
@@ -15,15 +16,14 @@ function SceneContents() {
   return (
     <>
       <color attach="background" args={['#111530']} />
-      <ambientLight intensity={0.8} />
+      {/* Lumière d'ambiance globale sans ombres */}
+      <ambientLight intensity={0.6} />
       <directionalLight
         position={[5, 8, 5]}
-        intensity={1.2}
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        intensity={0.8}
+        castShadow={false}
       />
-      <directionalLight position={[-4, 3, -2]} intensity={0.4} />
+      <directionalLight position={[-4, 3, -2]} intensity={0.3} />
 
       {/* Décor de la scène */}
       <Floor />
@@ -45,24 +45,19 @@ function SceneContents() {
       />
 
       {/* Arbre généalogique */}
-      <group>
-        {people.map((person) => (
-          <PersonCard key={person.id} person={person} />
-        ))}
-        {links.map((link) => (
-          <RelationshipLink key={link.id} start={link.start} end={link.end} />
-        ))}
-        <HeartBadge position={HEART_CENTER} />
-      </group>
+      <BounceAnimator amplitude={0.3} speed={1.8}>
+        <group>
+          {people.map((person) => (
+            <PersonCard key={person.id} person={person} />
+          ))}
+          {links.map((link) => (
+            <RelationshipLink key={link.id} start={link.start} end={link.end} />
+          ))}
+          <HeartBadge position={HEART_CENTER} />
+        </group>
+      </BounceAnimator>
 
-      <ContactShadows
-        position={[0, -2.59, 0]}
-        opacity={0.35}
-        width={10}
-        height={10}
-        blur={2}
-        far={4}
-      />
+      {/* Pas de ContactShadows : les ombres viennent uniquement du lampadaire */}
     </>
   );
 }

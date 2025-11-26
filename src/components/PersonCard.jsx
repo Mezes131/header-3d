@@ -306,6 +306,7 @@ export default function PersonCard({ person }) {
     >
       <mesh
         geometry={shellGeometry}
+        castShadow
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
@@ -324,6 +325,7 @@ export default function PersonCard({ person }) {
       <mesh
         geometry={faceGeometry}
         position={[0, 0, CARD_DEPTH / 2 - FACE_INSET]}
+        castShadow
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
@@ -343,6 +345,7 @@ export default function PersonCard({ person }) {
         position={[0, 0, -CARD_DEPTH / 2 + FACE_INSET]}
         rotation={[0, Math.PI, 0]}
         scale={1}
+        castShadow
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);

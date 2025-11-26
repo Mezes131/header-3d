@@ -150,7 +150,7 @@ export default function StreetLight() {
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-far={30}
-        shadow-bias={-0.0001}
+        shadow-bias={-0.8}
       />
 
       {/* Lumière supplémentaire pour éclairer le sol et créer des réflexions */}

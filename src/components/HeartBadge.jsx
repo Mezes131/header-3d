@@ -88,17 +88,17 @@ export default function HeartBadge({ position }) {
   return (
     <group position={adjustedPosition} scale={3*scale/4} rotation={[Math.PI, Math.PI, 0]}>
       {/* Shell circulaire (bordure épaisse) */}
-      <mesh geometry={shellGeometry}>
+      <mesh geometry={shellGeometry} castShadow>
         <meshStandardMaterial color="#ff4fa3" metalness={0.35} roughness={0.4} side={DoubleSide} />
       </mesh>
 
       {/* Face avant */}
-      <mesh geometry={faceGeometry} position={[0, 0, frontFaceZ]}>
+      <mesh geometry={faceGeometry} position={[0, 0, frontFaceZ]} castShadow>
         <meshStandardMaterial color="#ffffff" metalness={0.08} roughness={0.25} side={DoubleSide} />
       </mesh>
 
       {/* Face arrière */}
-      <mesh geometry={faceGeometry} position={[0, 0, backFaceZ]} rotation={[0, Math.PI, 0]}>
+      <mesh geometry={faceGeometry} position={[0, 0, backFaceZ]} rotation={[0, Math.PI, 0]} castShadow>
         <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.35} side={DoubleSide} />
       </mesh>
 
@@ -107,6 +107,7 @@ export default function HeartBadge({ position }) {
         geometry={heart1Geometry} 
         position={[ 0.08 * heartScale + centerOffsetX, centerOffsetY, heartsZ]}
         scale={heartScale}
+        castShadow
       >
         <meshStandardMaterial color="#ff9ec5" metalness={0.2} roughness={0.2} side={DoubleSide} />
       </mesh>
@@ -116,6 +117,7 @@ export default function HeartBadge({ position }) {
         geometry={heart2Geometry} 
         position={[heartHalfWidth * heartScale + centerOffsetX, centerOffsetY, heartsZ + 0.003]}
         scale={heartScale}
+        castShadow
       >
         <meshStandardMaterial color="#ff4f7a" metalness={0.2} roughness={0.2} side={DoubleSide} />
       </mesh>
