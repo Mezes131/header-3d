@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, ContactShadows } from '@react-three/drei';
 import PersonCard from './PersonCard';
@@ -9,10 +9,13 @@ import StreetLight from './StreetLight';
 import BrickWall from './BrickWall';
 import WindParticles from './WindParticles';
 import BounceAnimator from './BounceAnimator';
+import SceneStatusText from './SceneStatusText';
 import { people, links } from '../data/family';
 import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layout';
 
 function SceneContents() {
+  const [statusText, setStatusText] = useState('Click on a family member');
+
   return (
     <>
       <color attach="background" args={['#111530']} />
@@ -27,8 +30,17 @@ function SceneContents() {
 
       {/* Décor de la scène */}
       <Floor />
-      <StreetLight />
+      <StreetLight
+        onHoverChange={(isHovered) => {
+          setStatusText(isHovered ? 'Street light' : 'Click on a family member');
+        }}
+      />
       <WindParticles />
+
+      {/* Texte de statut 3D au-dessus de la scène */}
+      <BounceAnimator amplitude={0.3} speed={1.8} axis="z">
+        <SceneStatusText text={statusText} />
+      </BounceAnimator>
       
       {/* Murs de brique */}
       {/* Mur arrière */}
@@ -47,17 +59,30 @@ function SceneContents() {
       {/* Arbre généalogique */}
       <BounceAnimator amplitude={0.3} speed={1.8}>
         <group>
-          {people.map((person) => (
-            <PersonCard key={person.id} person={person} />
-          ))}
+          {people.map((person) => {
+            const label = person.generation === 0 ? 'Parent' : 'Child';
+            return (
+              <PersonCard
+                key={person.id}
+                person={person}
+                onHoverChange={(isHovered) => {
+                  setStatusText(isHovered ? label : 'Click on a family member');
+                }}
+              />
+            );
+          })}
           {links.map((link) => (
             <RelationshipLink key={link.id} start={link.start} end={link.end} />
           ))}
-          <HeartBadge position={HEART_CENTER} />
+          <HeartBadge
+            position={HEART_CENTER}
+            onHoverChange={(isHovered) => {
+              setStatusText(isHovered ? 'Spouse Relation' : 'Click on a family member');
+            }}
+          />
         </group>
       </BounceAnimator>
 
-      {/* Pas de ContactShadows : les ombres viennent uniquement du lampadaire */}
     </>
   );
 }

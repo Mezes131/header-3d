@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { CylinderGeometry, SphereGeometry, ConeGeometry, Object3D } from 'three';
 
 const POLE_HEIGHT = 8;
@@ -8,16 +9,15 @@ const BASE_RADIUS = 0.2;
 const BASE_HEIGHT = 0.3;
 
 // Position du lampadaire pour éclairer l'arbre généalogique
-// Placé légèrement en arrière et sur le côté pour un éclairage optimal
 const LIGHT_POSITION = [7, -4.6, 0.5];
 
-// Position cible de l'arbre généalogique (centre de la scène)
+// Position cible de l'arbre généalogique 
 const TREE_TARGET = [0, 0.3, 0];
 
-// Couleur de la lumière (jaune chaud pour correspondre à la lampe)
-const LIGHT_COLOR = '#fff8e1';
+// Couleur de la lumière
+const LIGHT_COLOR = '#fff0e1';
 
-export default function StreetLight() {
+export default function StreetLight({ onHoverChange }) {
   // Géométrie du poteau
   const poleGeometry = useMemo(
     () => new CylinderGeometry(POLE_RADIUS, POLE_RADIUS, POLE_HEIGHT, 16),
@@ -68,7 +68,17 @@ export default function StreetLight() {
   }, []);
 
   return (
-    <group position={LIGHT_POSITION}>
+    <group
+      position={LIGHT_POSITION}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        if (onHoverChange) onHoverChange(true);
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        if (onHoverChange) onHoverChange(false);
+      }}
+    >
       {/* Base du lampadaire */}
       <mesh
         geometry={baseGeometry}
@@ -164,4 +174,8 @@ export default function StreetLight() {
     </group>
   );
 }
+
+StreetLight.propTypes = {
+  onHoverChange: PropTypes.func,
+};
 

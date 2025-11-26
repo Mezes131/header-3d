@@ -8,7 +8,7 @@ import {
   HEART_BADGE_FACE_INSET,
 } from '../constants/layout';
 
-export default function HeartBadge({ position }) {
+export default function HeartBadge({ position, onHoverChange }) {
   const adjustedPosition = position;
   // Scale factor doublé
   const scale = 0.6;
@@ -86,7 +86,19 @@ export default function HeartBadge({ position }) {
   const heartsZ = frontFaceZ + 0.002;
 
   return (
-    <group position={adjustedPosition} scale={3*scale/4} rotation={[Math.PI, Math.PI, 0]}>
+    <group
+      position={adjustedPosition}
+      scale={3 * scale / 4}
+      rotation={[Math.PI, Math.PI, 0]}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        if (onHoverChange) onHoverChange(true);
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        if (onHoverChange) onHoverChange(false);
+      }}
+    >
       {/* Shell circulaire (bordure épaisse) */}
       <mesh geometry={shellGeometry} castShadow>
         <meshStandardMaterial color="#ff4fa3" metalness={0.35} roughness={0.4} side={DoubleSide} />
@@ -127,5 +139,6 @@ export default function HeartBadge({ position }) {
 
 HeartBadge.propTypes = {
   position: PropTypes.arrayOf(PropTypes.number).isRequired,
+  onHoverChange: PropTypes.func,
 };
 
