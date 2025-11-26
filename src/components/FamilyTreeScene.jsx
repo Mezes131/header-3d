@@ -73,7 +73,11 @@ export default function FamilyTreeScene() {
       <Suspense fallback={null}>
         <SceneContents />
       </Suspense>
-      <OrbitControls {...CONTROLS_CONFIG} />
+      <OrbitControls 
+        {...CONTROLS_CONFIG}
+        enableDamping={true}
+        dampingFactor={0.05}
+      />
     </Canvas>
   );
 }

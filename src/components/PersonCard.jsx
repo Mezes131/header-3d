@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { CanvasTexture, Color, ExtrudeGeometry, Float32BufferAttribute, Shape, ShapeGeometry } from 'three';
+import { useFrame } from '@react-three/fiber';
 import { CARD_DEPTH, CARD_HEIGHT, CARD_WIDTH } from '../constants/layout';
 
 // RoundedBox takes world units, so convert the 60px design radius to scene space.
@@ -199,6 +200,64 @@ function createCardTexture(person) {
 
 export default function PersonCard({ person }) {
   const [hovered, setHovered] = useState(false);
+  const groupRef = useRef();
+  const backFaceRef = useRef();
+  const shellMaterialRef = useRef();
+  const backFaceMaterialRef = useRef();
+  const emissiveIntensityRef = useRef(0);
+  const backEmissiveIntensityRef = useRef(0);
+
+  // Valeurs cibles pour l'animation
+  const targetScale = hovered ? 1.04 : 1;
+  const targetZ = hovered ? 0.08 : 0;
+  const targetBackScale = hovered ? 1.05 : 1;
+  const targetEmissiveIntensity = hovered ? 0.15 : 0;
+  const targetBackEmissiveIntensity = hovered ? 0.2 : 0;
+
+  // Animation smooth avec interpolation
+  useFrame(() => {
+    if (!groupRef.current || !backFaceRef.current) return;
+
+    // Interpolation linéaire pour un mouvement fluide (lerp factor: 0.15)
+    const lerpFactor = 0.15;
+    
+    // Animer le scale du group
+    const currentScale = groupRef.current.scale.x;
+    const newScale = currentScale + (targetScale - currentScale) * lerpFactor;
+    groupRef.current.scale.set(newScale, newScale, newScale);
+
+    // Animer la position Z
+    const currentZ = groupRef.current.position.z - person.position[2];
+    const newZ = currentZ + (targetZ - currentZ) * lerpFactor;
+    groupRef.current.position.z = person.position[2] + newZ;
+
+    // Animer le scale de la face arrière
+    const currentBackScale = backFaceRef.current.scale.x;
+    const newBackScale = currentBackScale + (targetBackScale - currentBackScale) * lerpFactor;
+    backFaceRef.current.scale.set(newBackScale, newBackScale, newBackScale);
+
+    // Animer l'intensité de l'émission
+    emissiveIntensityRef.current += (targetEmissiveIntensity - emissiveIntensityRef.current) * lerpFactor;
+    backEmissiveIntensityRef.current += (targetBackEmissiveIntensity - backEmissiveIntensityRef.current) * lerpFactor;
+
+    // Mettre à jour les matériaux directement
+    if (shellMaterialRef.current) {
+      shellMaterialRef.current.emissiveIntensity = emissiveIntensityRef.current;
+      if (hovered) {
+        shellMaterialRef.current.emissive.copy(emissive);
+      } else {
+        shellMaterialRef.current.emissive.setHex(0x000000);
+      }
+    }
+    if (backFaceMaterialRef.current) {
+      backFaceMaterialRef.current.emissiveIntensity = backEmissiveIntensityRef.current;
+      if (hovered) {
+        backFaceMaterialRef.current.emissive.copy(emissive);
+      } else {
+        backFaceMaterialRef.current.emissive.setHex(0x000000);
+      }
+    }
+  });
 
   const texture = useMemo(() => createCardTexture(person), [person]);
   const emissive = useMemo(
@@ -239,11 +298,12 @@ export default function PersonCard({ person }) {
     return new ShapeGeometry(shape, 32);
   }, []);
 
-  const groupScale = hovered ? 1.04 : 1;
-  const zLift = hovered ? 0.08 : 0;
-
   return (
-    <group position={[person.position[0], person.position[1], person.position[2] + zLift]} scale={groupScale}>
+    <group 
+      ref={groupRef}
+      position={[person.position[0], person.position[1], person.position[2]]}
+      scale={1}
+    >
       <mesh
         geometry={shellGeometry}
         onPointerOver={(e) => {
@@ -253,11 +313,12 @@ export default function PersonCard({ person }) {
         onPointerOut={() => setHovered(false)}
       >
         <meshStandardMaterial
+          ref={shellMaterialRef}
           color={genderPalette[person.gender].shell}
           roughness={0.4}
           metalness={0.1}
           emissive={hovered ? emissive : new Color('#000000')}
-          emissiveIntensity={hovered ? 0.15 : 0}
+          emissiveIntensity={0}
         />
       </mesh>
       <mesh
@@ -277,22 +338,24 @@ export default function PersonCard({ person }) {
         />
       </mesh>
       <mesh
+        ref={backFaceRef}
         geometry={backFaceGeometry}
         position={[0, 0, -CARD_DEPTH / 2 + FACE_INSET]}
         rotation={[0, Math.PI, 0]}
-        scale={hovered ? 1.05 : 1}
+        scale={1}
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
         }}
-        onPointerOut={() => setHovered(false)}  
+        onPointerOut={() => setHovered(false)}
       >
         <meshStandardMaterial
+          ref={backFaceMaterialRef}
           color={genderPalette[person.gender].shell}
           roughness={0.4}
           metalness={0.1}
           emissive={hovered ? emissive : new Color('#000000')}
-          emissiveIntensity={hovered ? 0.2 : 0}
+          emissiveIntensity={0}
         />
       </mesh>
       <mesh position={[0, -(CARD_HEIGHT / 2) - 0.02, 0]}>
