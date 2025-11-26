@@ -1,3 +1,21 @@
+import {
+  CARD_HALF_HEIGHT,
+  CARD_HALF_WIDTH,
+  HEART_CONNECT_Y,
+  PARENT_ROW_Y,
+  CHILD_ROW_Y,
+  PARENT_X_OFFSET,
+} from '../constants/layout';
+
+const leftParentPosition = [-PARENT_X_OFFSET, PARENT_ROW_Y, 0];
+const rightParentPosition = [PARENT_X_OFFSET, PARENT_ROW_Y, 0];
+const childPosition = [0, CHILD_ROW_Y, 0];
+
+const leftParentExit = [leftParentPosition[0] + CARD_HALF_WIDTH, PARENT_ROW_Y, 0];
+const rightParentExit = [rightParentPosition[0] - CARD_HALF_WIDTH, PARENT_ROW_Y, 0];
+const unionAnchor = [0, HEART_CONNECT_Y, 0];
+const childTop = [0, childPosition[1] + CARD_HALF_HEIGHT, 0];
+
 export const people = [
   {
     id: 'jean',
@@ -6,7 +24,7 @@ export const people = [
     birthDate: '13/11/1985',
     gender: 'male',
     generation: 0,
-    position: [-3.4, 1.1, 0],
+    position: leftParentPosition,
   },
   {
     id: 'jeanne',
@@ -15,7 +33,7 @@ export const people = [
     birthDate: '08/09/1998',
     gender: 'female',
     generation: 0,
-    position: [3.4, 1.1, 0],
+    position: rightParentPosition,
   },
   {
     id: 'junior',
@@ -24,25 +42,25 @@ export const people = [
     birthDate: '14/02/2017',
     gender: 'male',
     generation: 1,
-    position: [0, -1.6, 0],
+    position: childPosition,
   },
 ];
 
 export const links = [
   {
     id: 'parents-union-left',
-    start: [-2.1, 1.05, 0],
-    end: [-0.6, 0.35, 0],
+    start: leftParentExit,
+    end: unionAnchor,
   },
   {
     id: 'parents-union-right',
-    start: [2.1, 1.05, 0],
-    end: [0.6, 0.35, 0],
+    start: rightParentExit,
+    end: unionAnchor,
   },
   {
     id: 'union-child',
-    start: [0, 0.35, 0],
-    end: [0, -0.8, 0],
+    start: unionAnchor,
+    end: childTop,
   },
 ];
 

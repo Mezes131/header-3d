@@ -5,7 +5,7 @@ import PersonCard from './PersonCard';
 import RelationshipLink from './RelationshipLink';
 import HeartBadge from './HeartBadge';
 import { people, links } from '../data/family';
-import { CAMERA_CONFIG, CONTROLS_CONFIG } from '../constants/layout';
+import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layout';
 
 function SceneContents() {
   return (
@@ -28,7 +28,7 @@ function SceneContents() {
         {links.map((link) => (
           <RelationshipLink key={link.id} start={link.start} end={link.end} />
         ))}
-        <HeartBadge position={[0, 0.4, 0]} />
+        <HeartBadge position={HEART_CENTER} />
       </group>
 
       <ContactShadows

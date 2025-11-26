@@ -1,40 +1,30 @@
 import { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Shape, ShapeGeometry, ExtrudeGeometry, DoubleSide } from 'three';
-import { CARD_HEIGHT } from '../constants/layout';
-
-const BADGE_RADIUS = 1.25;
-const BADGE_DEPTH = 0.12;
-const BORDER_THICKNESS = 0.14;
-const FACE_INSET = 0.01;
+import {
+  HEART_BADGE_RADIUS,
+  HEART_BADGE_DEPTH,
+  HEART_BADGE_BORDER,
+  HEART_BADGE_FACE_INSET,
+} from '../constants/layout';
 
 export default function HeartBadge({ position }) {
-  // Calcul du décalage vers le haut : moitié de la hauteur des cartes des parents
-  const offsetY = CARD_HEIGHT / 2; // 3.15 / 2 = 1.575
-  const adjustedPosition = [position[0], position[1] + offsetY, position[2]];
+  const adjustedPosition = position;
   // Scale factor doublé
   const scale = 0.6;
   
   // Dimensions du cœur
-  // Largeur: de -0.9 à +0.9 = 1.8
-  // Hauteur: de -0.05 à 1.3 = 1.35
   const heartWidth = 1.8;
-  const heartHeight = 1.35;
-  const heartHalfWidth = heartWidth / 2; // 0.9
+  const heartHalfWidth = heartWidth / 2; 
   
   // Scale pour réduire les cœurs de moitié
   const heartScale = 0.5;
   
   // Calcul du centre pour centrer les cœurs dans la box
-  // Cœur rose décalé: position X = 0.9 * 0.5 = 0.45
-  // Cœur rouge: position X = 0.08 * 0.5 = 0.04 (dans la forme)
-  // Centre horizontal approximatif: (0.45 + 0.04) / 2 = 0.245
   // On décale vers la gauche pour centrer
   const centerOffsetX = -(heartHalfWidth * heartScale + 0.08 * heartScale) / 2;
   
-  // Centre vertical: le cœur va de y = -0.05 à y = 1.3, donc centre absolu à (-0.05 + 1.3) / 2 = 0.625
-  // Pour centrer, on décale de -0.625, puis on applique le scale
-  // Après scale: -0.625 * 0.5 = -0.3125
+  // Centre vertical
   const centerOffsetY = -((1.3 + (-0.05)) / 2) * heartScale;
   
   const createCircleShape = (radius) => {
@@ -73,30 +63,30 @@ export default function HeartBadge({ position }) {
 
   // Shell circulaire avec bordure (équivalent RoundedBox)
   const shellGeometry = useMemo(() => {
-    const outer = createCircleShape(BADGE_RADIUS);
-    const inner = createCircleShape(BADGE_RADIUS - BORDER_THICKNESS);
+    const outer = createCircleShape(HEART_BADGE_RADIUS);
+    const inner = createCircleShape(HEART_BADGE_RADIUS - HEART_BADGE_BORDER);
     outer.holes.push(inner);
     const geometry = new ExtrudeGeometry(outer, {
-      depth: BADGE_DEPTH,
+      depth: HEART_BADGE_DEPTH,
       bevelEnabled: false,
       steps: 1,
     });
-    geometry.translate(0, 0, -BADGE_DEPTH / 2);
+    geometry.translate(0, 0, -HEART_BADGE_DEPTH / 2);
     return geometry;
   }, []);
 
   // Faces avant/arrière
   const faceGeometry = useMemo(() => {
-    const faceShape = createCircleShape(BADGE_RADIUS - BORDER_THICKNESS + FACE_INSET);
+    const faceShape = createCircleShape(HEART_BADGE_RADIUS - HEART_BADGE_BORDER + HEART_BADGE_FACE_INSET);
     return new ShapeGeometry(faceShape, 64);
   }, []);
 
-  const frontFaceZ = BADGE_DEPTH / 2 - FACE_INSET;
-  const backFaceZ = -BADGE_DEPTH / 2 + FACE_INSET;
+  const frontFaceZ = HEART_BADGE_DEPTH / 2 - HEART_BADGE_FACE_INSET;
+  const backFaceZ = -HEART_BADGE_DEPTH / 2 + HEART_BADGE_FACE_INSET;
   const heartsZ = frontFaceZ + 0.002;
 
   return (
-    <group position={adjustedPosition} scale={scale} rotation={[Math.PI, Math.PI, 0]}>
+    <group position={adjustedPosition} scale={3*scale/4} rotation={[Math.PI, Math.PI, 0]}>
       {/* Shell circulaire (bordure épaisse) */}
       <mesh geometry={shellGeometry}>
         <meshStandardMaterial color="#ff4fa3" metalness={0.35} roughness={0.4} side={DoubleSide} />
@@ -112,19 +102,19 @@ export default function HeartBadge({ position }) {
         <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.35} side={DoubleSide} />
       </mesh>
 
-      {/* Premier cœur (rose, en arrière, décalé vers la droite) */}
+      {/* Premier cœur (rouge) */}
       <mesh 
         geometry={heart1Geometry} 
-        position={[heartHalfWidth * heartScale + centerOffsetX, centerOffsetY, heartsZ]}
+        position={[ 0.08 * heartScale + centerOffsetX, centerOffsetY, heartsZ]}
         scale={heartScale}
       >
         <meshStandardMaterial color="#ff9ec5" metalness={0.2} roughness={0.2} side={DoubleSide} />
       </mesh>
 
-      {/* Deuxième cœur (rouge, en avant) */}
+      {/* Deuxième cœur (rose) */}
       <mesh 
         geometry={heart2Geometry} 
-        position={[0.08 * heartScale + centerOffsetX, centerOffsetY, heartsZ + 0.003]}
+        position={[heartHalfWidth * heartScale + centerOffsetX, centerOffsetY, heartsZ + 0.003]}
         scale={heartScale}
       >
         <meshStandardMaterial color="#ff4f7a" metalness={0.2} roughness={0.2} side={DoubleSide} />
