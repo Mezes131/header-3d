@@ -207,6 +207,12 @@ export default function PersonCard({ person, onHoverChange }) {
   const emissiveIntensityRef = useRef(0);
   const backEmissiveIntensityRef = useRef(0);
 
+  const texture = useMemo(() => createCardTexture(person), [person]);
+  const emissive = useMemo(
+    () => new Color(person.gender === 'male' ? '#9fbfff' : '#ffc1df'),
+    [person.gender],
+  );
+
   // Valeurs cibles pour l'animation
   const targetScale = hovered ? 1.04 : 1;
   const targetZ = hovered ? 0.08 : 0;
@@ -259,11 +265,6 @@ export default function PersonCard({ person, onHoverChange }) {
     }
   });
 
-  const texture = useMemo(() => createCardTexture(person), [person]);
-  const emissive = useMemo(
-    () => new Color(person.gender === 'male' ? '#9fbfff' : '#ffc1df'),
-    [person.gender],
-  );
   // Precompute a rounded rectangle geometry so the textured face matches the shell outline.
   const faceGeometry = useMemo(() => {
     const width = CARD_WIDTH;

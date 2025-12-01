@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useLayoutEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { BufferGeometry, Float32BufferAttribute } from 'three';
 
@@ -12,6 +12,14 @@ const PARTICLE_AREA = {
   z: [-8, 8],   // Zone profondeur
 };
 
+function randomInRange(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function randomVariation(windVariation) {
+  return (Math.random() - 0.5) * windVariation;
+}
+
 export default function WindParticles() {
   const pointsRef = useRef();
   const velocitiesRef = useRef();
@@ -19,26 +27,40 @@ export default function WindParticles() {
   // Initialisation des positions et vitesses des particules
   const positions = useMemo(() => {
     const pos = new Float32Array(PARTICLE_COUNT * 3);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const i3 = i * 3;
+
+      // Position aléatoire dans la zone définie
+      pos[i3] = randomInRange(PARTICLE_AREA.x[0], PARTICLE_AREA.x[1]);
+      pos[i3 + 1] = randomInRange(PARTICLE_AREA.y[0], PARTICLE_AREA.y[1]);
+      pos[i3 + 2] = randomInRange(PARTICLE_AREA.z[0], PARTICLE_AREA.z[1]);
+    }
+
+    return pos;
+  }, []);
+
+  // Initialisation des vitesses des particules
+  const velocities = useMemo(() => {
     const vel = new Float32Array(PARTICLE_COUNT * 3);
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const i3 = i * 3;
-      
-      // Position aléatoire dans la zone définie
-      pos[i3] = Math.random() * (PARTICLE_AREA.x[1] - PARTICLE_AREA.x[0]) + PARTICLE_AREA.x[0];
-      pos[i3 + 1] = Math.random() * (PARTICLE_AREA.y[1] - PARTICLE_AREA.y[0]) + PARTICLE_AREA.y[0];
-      pos[i3 + 2] = Math.random() * (PARTICLE_AREA.z[1] - PARTICLE_AREA.z[0]) + PARTICLE_AREA.z[0];
-      
+
       // Vitesse initiale avec variation aléatoire
       const windVariation = 0.3;
-      vel[i3] = WIND_DIRECTION[0] * WIND_SPEED + (Math.random() - 0.5) * windVariation * WIND_SPEED;
-      vel[i3 + 1] = WIND_DIRECTION[1] * WIND_SPEED + (Math.random() - 0.5) * windVariation * WIND_SPEED;
-      vel[i3 + 2] = WIND_DIRECTION[2] * WIND_SPEED + (Math.random() - 0.5) * windVariation * WIND_SPEED;
+      vel[i3] = WIND_DIRECTION[0] * WIND_SPEED + randomVariation(windVariation) * WIND_SPEED;
+      vel[i3 + 1] = WIND_DIRECTION[1] * WIND_SPEED + randomVariation(windVariation) * WIND_SPEED;
+      vel[i3 + 2] = WIND_DIRECTION[2] * WIND_SPEED + randomVariation(windVariation) * WIND_SPEED;
     }
 
-    velocitiesRef.current = vel;
-    return pos;
+    return vel;
   }, []);
+
+  // Mettre à jour la ref après le rendu initial
+  useLayoutEffect(() => {
+    velocitiesRef.current = velocities;
+  }, [velocities]);
 
   // Animation des particules
   useFrame((state) => {
@@ -65,12 +87,12 @@ export default function WindParticles() {
       // Réinitialiser la particule si elle sort de la zone
       if (positions[i3] > PARTICLE_AREA.x[1]) {
         positions[i3] = PARTICLE_AREA.x[0];
-        positions[i3 + 1] = Math.random() * (PARTICLE_AREA.y[1] - PARTICLE_AREA.y[0]) + PARTICLE_AREA.y[0];
-        positions[i3 + 2] = Math.random() * (PARTICLE_AREA.z[1] - PARTICLE_AREA.z[0]) + PARTICLE_AREA.z[0];
+        positions[i3 + 1] = randomInRange(PARTICLE_AREA.y[0], PARTICLE_AREA.y[1]);
+        positions[i3 + 2] = randomInRange(PARTICLE_AREA.z[0], PARTICLE_AREA.z[1]);
       } else if (positions[i3] < PARTICLE_AREA.x[0]) {
         positions[i3] = PARTICLE_AREA.x[1];
-        positions[i3 + 1] = Math.random() * (PARTICLE_AREA.y[1] - PARTICLE_AREA.y[0]) + PARTICLE_AREA.y[0];
-        positions[i3 + 2] = Math.random() * (PARTICLE_AREA.z[1] - PARTICLE_AREA.z[0]) + PARTICLE_AREA.z[0];
+        positions[i3 + 1] = randomInRange(PARTICLE_AREA.y[0], PARTICLE_AREA.y[1]);
+        positions[i3 + 2] = randomInRange(PARTICLE_AREA.z[0], PARTICLE_AREA.z[1]);
       }
 
       if (positions[i3 + 1] > PARTICLE_AREA.y[1]) {
