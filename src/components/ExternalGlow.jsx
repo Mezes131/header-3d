@@ -128,10 +128,6 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
     return layers;
   }, [type]);
 
-  if (!hovered && opacityRef.current < 0.01) {
-    return null;
-  }
-
   return (
     <group>
       {glowLayers.map((layer, index) => (
