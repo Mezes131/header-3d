@@ -9,8 +9,8 @@ export const HEART_BADGE_DEPTH = 0.12;
 export const HEART_BADGE_BORDER = 0.14;
 export const HEART_BADGE_FACE_INSET = 0.01;
 
-export const PARENT_ROW_Y = 1.1;
-export const CHILD_ROW_Y = -2.5;
+export const PARENT_ROW_Y = 1.3;
+export const CHILD_ROW_Y = -2.2;
 export const PARENT_X_OFFSET = 3.5;
 
 export const HEART_CENTER = [0, 1.1, 0];

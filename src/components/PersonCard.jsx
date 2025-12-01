@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { CanvasTexture, Color, ExtrudeGeometry, Float32BufferAttribute, Shape, ShapeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { CARD_DEPTH, CARD_HEIGHT, CARD_WIDTH } from '../constants/layout';
+import ExternalGlow from './ExternalGlow';
 
 // RoundedBox takes world units, so convert the 60px design radius to scene space.
 const CARD_CORNER_RADIUS = (60 / 512) * CARD_WIDTH;
@@ -381,6 +382,7 @@ export default function PersonCard({ person, onHoverChange }) {
         <planeGeometry args={[CARD_WIDTH * 0.6, 0.02]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
+      <ExternalGlow hovered={hovered} type="card" />
     </group>
   );
 }

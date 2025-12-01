@@ -1,6 +1,7 @@
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { CylinderGeometry, SphereGeometry, ConeGeometry, Object3D } from 'three';
+import ExternalGlow from './ExternalGlow';
 
 const POLE_HEIGHT = 8;
 const POLE_RADIUS = 0.08;
@@ -18,6 +19,8 @@ const TREE_TARGET = [0, 0.3, 0];
 const LIGHT_COLOR = '#fff0e1';
 
 export default function StreetLight({ onHoverChange }) {
+  const [hovered, setHovered] = useState(false);
+
   // Géométrie du poteau
   const poleGeometry = useMemo(
     () => new CylinderGeometry(POLE_RADIUS, POLE_RADIUS, POLE_HEIGHT, 16),
@@ -72,10 +75,12 @@ export default function StreetLight({ onHoverChange }) {
       position={LIGHT_POSITION}
       onPointerOver={(e) => {
         e.stopPropagation();
+        setHovered(true);
         if (onHoverChange) onHoverChange(true);
       }}
       onPointerOut={(e) => {
         e.stopPropagation();
+        setHovered(false);
         if (onHoverChange) onHoverChange(false);
       }}
     >
@@ -171,6 +176,7 @@ export default function StreetLight({ onHoverChange }) {
         distance={20}
         decay={2}
       />
+      <ExternalGlow hovered={hovered} type="light" />
     </group>
   );
 }

@@ -7,9 +7,9 @@ const WIND_SPEED = 0.02;
 const WIND_DIRECTION = [0.3, 0.1, -0.2]; // Direction du vent (x, y, z)
 const PARTICLE_SIZE = 0.05;
 const PARTICLE_AREA = {
-  x: [-8, 8],   // Zone horizontale
+  x: [-9, 9],   // Zone horizontale
   y: [-4, 6],   // Zone verticale
-  z: [-8, 8],   // Zone profondeur
+  z: [-9, 9],   // Zone profondeur
 };
 
 function randomInRange(min, max) {

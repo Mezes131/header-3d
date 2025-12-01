@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Shape, ShapeGeometry, ExtrudeGeometry, DoubleSide } from 'three';
 import {
@@ -7,8 +7,10 @@ import {
   HEART_BADGE_BORDER,
   HEART_BADGE_FACE_INSET,
 } from '../constants/layout';
+import ExternalGlow from './ExternalGlow';
 
 export default function HeartBadge({ position, onHoverChange }) {
+  const [hovered, setHovered] = useState(false);
   const adjustedPosition = position;
   // Scale factor doublé
   const scale = 0.6;
@@ -92,10 +94,12 @@ export default function HeartBadge({ position, onHoverChange }) {
       rotation={[Math.PI, Math.PI, 0]}
       onPointerOver={(e) => {
         e.stopPropagation();
+        setHovered(true);
         if (onHoverChange) onHoverChange(true);
       }}
       onPointerOut={(e) => {
         e.stopPropagation();
+        setHovered(false);
         if (onHoverChange) onHoverChange(false);
       }}
     >
@@ -133,6 +137,7 @@ export default function HeartBadge({ position, onHoverChange }) {
       >
         <meshStandardMaterial color="#ff4f7a" metalness={0.2} roughness={0.2} side={DoubleSide} />
       </mesh>
+      <ExternalGlow hovered={hovered} type="badge" />
     </group>
   );
 }
