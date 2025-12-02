@@ -5,10 +5,10 @@ import { Shape, ExtrudeGeometry, SphereGeometry, BoxGeometry } from 'three';
 import { CARD_WIDTH, CARD_HEIGHT, CARD_DEPTH } from '../constants/layout';
 import { HEART_BADGE_RADIUS, HEART_BADGE_DEPTH } from '../constants/layout';
 
-const GLOW_INTENSITY = 1.2;
+const GLOW_INTENSITY = 1.5;
 const GLOW_SIZE_MULTIPLIER = 1.12; // Taille du halo par rapport à l'objet
-const GLOW_THICKNESS = 0.15; // Épaisseur du halo
-const GLOW_LAYERS = 3; // Nombre de couches pour un effet de dégradé
+const GLOW_THICKNESS = 0.08; // Épaisseur du halo
+let GLOW_LAYERS = 3; // Nombre de couches pour un effet de dégradé
 
 // Fonction pour créer une forme rectangulaire arrondie (pour PersonCard)
 function createRoundedRectShape(width, height, radius) {
@@ -32,6 +32,7 @@ function createRoundedRectShape(width, height, radius) {
 // Fonction pour créer une forme circulaire (pour HeartBadge)
 function createCircleShape(radius) {
   const shape = new Shape();
+  GLOW_LAYERS = 15;
   shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
   return shape;
 }
@@ -48,7 +49,7 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
     meshRefs.current.forEach((mesh) => {
       if (mesh && mesh.material) {
         mesh.material.opacity = opacityRef.current * (mesh.userData.baseOpacity || 1);
-        mesh.material.emissiveIntensity = opacityRef.current * (mesh.userData.baseOpacity || 1);
+        //mesh.material.emissiveIntensity = opacityRef.current * (mesh.userData.baseOpacity || 1);
       }
     });
   });
@@ -73,7 +74,7 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
     const layers = [];
     for (let i = 0; i < GLOW_LAYERS; i++) {
       const layerSize = GLOW_SIZE_MULTIPLIER + (i * 0.03); // Chaque couche est légèrement plus grande
-      const layerOpacity = 0.3 / (i + 1); // Opacité décroissante pour chaque couche
+      const layerOpacity = 0.6 / (i + 1); // Opacité décroissante pour chaque couche
       
       let layerGeometry;
       switch (type) {
@@ -143,10 +144,8 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
           position={glowPosition}
           renderOrder={-1 - index} // Rendre en premier pour être derrière l'objet
         >
-          <meshStandardMaterial
+          <meshBasicMaterial
             color="#ffffff"
-            emissive="#ffffff"
-            emissiveIntensity={0}
             transparent
             opacity={layer.opacity}
             side={2} // DoubleSide
