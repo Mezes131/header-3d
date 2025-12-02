@@ -1,0 +1,399 @@
+.space-cursor {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+}
+
+/* Nébuleuse planétaire centrale */
+.planetary-nebula {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+}
+
+/* Noyau central brillant */
+.nebula-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(135, 206, 250, 1) 30%,
+    rgba(74, 144, 226, 0.9) 60%,
+    rgba(43, 119, 226, 0.7) 100%
+  );
+  box-shadow: 
+    0 0 10px rgba(255, 255, 255, 1),
+    0 0 20px rgba(135, 206, 250, 0.9),
+    0 0 30px rgba(74, 144, 226, 0.8),
+    0 0 40px rgba(43, 119, 226, 0.7);
+  animation: nebulaCorePulse 2s ease-in-out infinite;
+  filter: blur(0.5px);
+}
+
+/* Couches de gaz de la nébuleuse */
+.nebula-layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  filter: blur(2px);
+  opacity: 0.8;
+}
+
+.nebula-layer-1 {
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(
+    circle,
+    rgba(74, 144, 226, 0.9) 0%,
+    rgba(138, 43, 226, 0.7) 50%,
+    rgba(255, 20, 147, 0.5) 100%
+  );
+  box-shadow: 
+    0 0 15px rgba(74, 144, 226, 0.8),
+    0 0 25px rgba(138, 43, 226, 0.6);
+  animation: nebulaLayer1 4s ease-in-out infinite;
+}
+
+.nebula-layer-2 {
+  width: 24px;
+  height: 24px;
+  background: radial-gradient(
+    circle,
+    rgba(138, 43, 226, 0.7) 0%,
+    rgba(255, 20, 147, 0.6) 40%,
+    rgba(74, 144, 226, 0.4) 80%,
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 20px rgba(138, 43, 226, 0.7),
+    0 0 30px rgba(255, 20, 147, 0.5);
+  animation: nebulaLayer2 5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.nebula-layer-3 {
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 20, 147, 0.5) 0%,
+    rgba(74, 144, 226, 0.4) 30%,
+    rgba(138, 43, 226, 0.3) 60%,
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 25px rgba(255, 20, 147, 0.6),
+    0 0 35px rgba(74, 144, 226, 0.4);
+  animation: nebulaLayer3 6s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+/* Glow interne */
+.nebula-glow-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(135, 206, 250, 0.2) 20%,
+    rgba(74, 144, 226, 0.15) 40%,
+    rgba(138, 43, 226, 0.1) 60%,
+    transparent 100%
+  );
+  filter: blur(4px);
+  animation: nebulaGlowInner 3s ease-in-out infinite;
+}
+
+@keyframes nebulaCorePulse {
+  0%, 100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+@keyframes nebulaLayer1 {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.1) rotate(180deg);
+  }
+}
+
+@keyframes nebulaLayer2 {
+  0%, 100% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.15) rotate(-180deg);
+  }
+}
+
+@keyframes nebulaLayer3 {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.2) rotate(180deg);
+  }
+}
+
+@keyframes nebulaGlowInner {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+/* Étoiles orbitantes */
+.star {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  top: 50%;
+  left: 50%;
+  transform-origin: 0 0;
+}
+
+.star::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  border-radius: inherit;
+  box-shadow: inherit;
+  animation: starPulse 1.5s ease-in-out infinite;
+}
+
+.star-1 {
+  animation: starOrbit1 4s linear infinite, starTwinkle 2s ease-in-out infinite;
+  animation-delay: 0s, 0s;
+}
+
+.star-2 {
+  animation: starOrbit2 4s linear infinite, starTwinkle 2s ease-in-out infinite;
+  animation-delay: 0s, 0.2s;
+}
+
+.star-3 {
+  animation: starOrbit3 4s linear infinite, starTwinkle 2s ease-in-out infinite;
+  animation-delay: 0s, 0.4s;
+}
+
+.star-4 {
+  animation: starOrbit4 4s linear infinite, starTwinkle 2s ease-in-out infinite;
+  animation-delay: 0s, 0.6s;
+}
+
+.star-5 {
+  animation: starOrbit5 4s linear infinite, starTwinkle 2s ease-in-out infinite;
+  animation-delay: 0s, 0.8s;
+}
+
+.star-6 {
+  animation: starOrbit6 4s linear infinite, starTwinkle 2s ease-in-out infinite;
+  animation-delay: 0s, 1s;
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes starPulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes starOrbit1 {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) translateX(25px) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg) translateX(25px) rotate(-360deg);
+  }
+}
+
+@keyframes starOrbit2 {
+  0% {
+    transform: translate(-50%, -50%) rotate(60deg) translateX(25px) rotate(-60deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(420deg) translateX(25px) rotate(-420deg);
+  }
+}
+
+@keyframes starOrbit3 {
+  0% {
+    transform: translate(-50%, -50%) rotate(120deg) translateX(25px) rotate(-120deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(480deg) translateX(25px) rotate(-480deg);
+  }
+}
+
+@keyframes starOrbit4 {
+  0% {
+    transform: translate(-50%, -50%) rotate(180deg) translateX(25px) rotate(-180deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(540deg) translateX(25px) rotate(-540deg);
+  }
+}
+
+@keyframes starOrbit5 {
+  0% {
+    transform: translate(-50%, -50%) rotate(240deg) translateX(25px) rotate(-240deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(600deg) translateX(25px) rotate(-600deg);
+  }
+}
+
+@keyframes starOrbit6 {
+  0% {
+    transform: translate(-50%, -50%) rotate(300deg) translateX(25px) rotate(-300deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(660deg) translateX(25px) rotate(-660deg);
+  }
+}
+
+/* Nébuleuse/glow autour */
+.nebula-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(74, 144, 226, 0.3) 0%,
+    rgba(138, 43, 226, 0.2) 40%,
+    rgba(255, 20, 147, 0.1) 70%,
+    transparent 100%
+  );
+  animation: nebulaPulse 3s ease-in-out infinite;
+  filter: blur(8px);
+}
+
+@keyframes nebulaPulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+
+/* Particules de poussière d'étoile (traînée) */
+.star-dust-particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 1) 15%,
+    rgba(255, 255, 255, 0.95) 25%,
+    rgba(74, 144, 226, 0.9) 45%,
+    rgba(138, 43, 226, 0.7) 65%,
+    rgba(255, 20, 147, 0.5) 85%,
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 4px rgba(255, 255, 255, 1),
+    0 0 8px rgba(255, 255, 255, 0.9),
+    0 0 12px rgba(74, 144, 226, 0.9),
+    0 0 18px rgba(138, 43, 226, 0.7),
+    0 0 25px rgba(255, 20, 147, 0.5);
+  animation: starDustFade 1.2s ease-out forwards;
+  filter: blur(0.3px);
+  will-change: transform, opacity;
+}
+
+@keyframes starDustFade {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  30% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(0.9) rotate(180deg);
+  }
+  60% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(0.6) rotate(360deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2) rotate(540deg);
+  }
+}
+
+/* Masquer le curseur par défaut sur le canvas */
+.canvas-wrapper {
+  cursor: none;
+}
+
+.canvas-wrapper canvas {
+  cursor: none;
+}
+

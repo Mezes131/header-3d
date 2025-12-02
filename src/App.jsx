@@ -1,5 +1,6 @@
 import './App.css';
 import FamilyTreeScene from './components/FamilyTreeScene';
+import SpaceCursor from './components/SpaceCursor';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <div className="canvas-wrapper">
         <FamilyTreeScene />
       </div>
+      <SpaceCursor />
     </div>
   );
 }
