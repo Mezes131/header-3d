@@ -32,7 +32,6 @@ function createRoundedRectShape(width, height, radius) {
 // Fonction pour créer une forme circulaire (pour HeartBadge)
 function createCircleShape(radius) {
   const shape = new Shape();
-  GLOW_LAYERS = 15;
   shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
   return shape;
 }
@@ -79,6 +78,7 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
       let layerGeometry;
       switch (type) {
         case 'card': {
+          GLOW_LAYERS = 4;
           const outerWidth = CARD_WIDTH * layerSize;
           const outerHeight = CARD_HEIGHT * layerSize;
           const outerRadius = (60 / 512) * outerWidth;
@@ -99,6 +99,7 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
           break;
         }
         case 'badge': {
+          GLOW_LAYERS = 15;
           const outerRadius = HEART_BADGE_RADIUS * layerSize;
           const innerRadius = HEART_BADGE_RADIUS * (layerSize - 0.05);
 
@@ -115,6 +116,7 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
           break;
         }
         case 'light': {
+          GLOW_LAYERS = 3;
           const lampRadius = 0.4;
           const glowRadius = lampRadius * layerSize * 1.5;
           layerGeometry = new SphereGeometry(glowRadius, 32, 32);
