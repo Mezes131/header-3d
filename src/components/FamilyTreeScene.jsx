@@ -10,11 +10,13 @@ import BrickWall from './BrickWall';
 import WindParticles from './WindParticles';
 import BounceAnimator from './BounceAnimator';
 import SceneStatusText from './SceneStatusText';
+import CardView from './CardView';
 import { people, links } from '../data/family';
 import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layout';
 
 function SceneContents() {
   const [statusText, setStatusText] = useState('Click on a family member');
+  const [selectedPerson, setSelectedPerson] = useState(null);
 
   return (
     <>
@@ -68,6 +70,9 @@ function SceneContents() {
                 onHoverChange={(isHovered) => {
                   setStatusText(isHovered ? label : 'Click on a family member');
                 }}
+                onClick={(person) => {
+                  setSelectedPerson(person);
+                }}
               />
             );
           })}
@@ -82,6 +87,14 @@ function SceneContents() {
           />
         </group>
       </BounceAnimator>
+
+      {/* CardView affichée lorsqu'une personne est sélectionnée */}
+      {selectedPerson && (
+        <CardView
+          person={selectedPerson}
+          onClose={() => setSelectedPerson(null)}
+        />
+      )}
 
     </>
   );

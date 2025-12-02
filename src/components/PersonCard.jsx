@@ -199,7 +199,7 @@ function createCardTexture(person) {
   return texture;
 }
 
-export default function PersonCard({ person, onHoverChange }) {
+export default function PersonCard({ person, onHoverChange, onClick }) {
   const [hovered, setHovered] = useState(false);
   const groupRef = useRef();
   const backFaceRef = useRef();
@@ -319,6 +319,10 @@ export default function PersonCard({ person, onHoverChange }) {
           setHovered(false);
           if (onHoverChange) onHoverChange(false);
         }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onClick) onClick(person);
+        }}
       >
         <meshStandardMaterial
           ref={shellMaterialRef}
@@ -342,6 +346,10 @@ export default function PersonCard({ person, onHoverChange }) {
           e.stopPropagation();
           setHovered(false);
           if (onHoverChange) onHoverChange(false);
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onClick) onClick(person);
         }}
       >
         <meshStandardMaterial
@@ -367,6 +375,10 @@ export default function PersonCard({ person, onHoverChange }) {
           e.stopPropagation();
           setHovered(false);
           if (onHoverChange) onHoverChange(false);
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onClick) onClick(person);
         }}
       >
         <meshStandardMaterial
@@ -398,6 +410,7 @@ PersonCard.propTypes = {
     position: PropTypes.arrayOf(PropTypes.number).isRequired,
   }).isRequired,
   onHoverChange: PropTypes.func,
+  onClick: PropTypes.func,
 };
 
 
