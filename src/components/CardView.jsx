@@ -92,33 +92,35 @@ function createIdCardTexture(person, avatarImage) {
   // Zone avatar (côté gauche)
   const avatarSize = 200;
   const avatarX = 60;
-  const avatarY = (canvas.height - avatarSize) / 2;
+  const avatarY = (canvas.height - avatarSize) / 2 - 50;
+  const avatarRadius = 20; // Rayon des coins arrondis
+  const padding = 10; // Padding autour de l'avatar
 
-  // Fond circulaire pour l'avatar
+  // Fond rectangulaire arrondi pour l'avatar
   ctx.fillStyle = genderPalette[person.gender].accent;
   ctx.beginPath();
-  ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2 + 10, 0, Math.PI * 2);
+  ctx.roundRect(avatarX - padding, avatarY - padding, avatarSize + padding * 2, avatarSize + padding * 2, avatarRadius);
   ctx.fill();
 
   // Dessiner l'avatar si disponible
   if (avatarImage) {
     ctx.save();
     ctx.beginPath();
-    ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+    ctx.roundRect(avatarX, avatarY, avatarSize, avatarSize, avatarRadius);
     ctx.clip();
     ctx.drawImage(avatarImage, avatarX, avatarY, avatarSize, avatarSize);
     ctx.restore();
   }
 
   // Zone texte (côté droit)
-  const textX = avatarX + avatarSize + 40;
-  const textY = 80;
+  const textX = avatarX + avatarSize + 60;
+  const textY = 120;
 
   // Titre "IDENTITÉ"
   ctx.fillStyle = genderPalette[person.gender].accent;
   ctx.font = 'bold 32px "Poppins", "Segoe UI", sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('IDENTITÉ', textX, textY);
+  ctx.fillText('IDENTITY', textX, textY);
 
   // Ligne de séparation
   ctx.strokeStyle = genderPalette[person.gender].accent;
@@ -130,31 +132,31 @@ function createIdCardTexture(person, avatarImage) {
 
   // Prénom
   ctx.fillStyle = '#10152d';
-  ctx.font = 'bold 48px "Poppins", "Segoe UI", sans-serif';
-  ctx.fillText('Prénom', textX, textY + 80);
-  ctx.font = '500 36px "Poppins", "Segoe UI", sans-serif';
+  ctx.font = 'bold 36px "Poppins", "Segoe UI", sans-serif';
+  ctx.fillText('First Name:', textX, textY + 100);
+  ctx.font = '500 32px "Poppins", "Segoe UI", sans-serif';
   ctx.fillStyle = '#2d3450';
-  ctx.fillText(person.firstName, textX + 20, textY + 120);
+  ctx.fillText(person.firstName, textX + 220, textY + 100);
 
   // Nom
   ctx.fillStyle = '#10152d';
-  ctx.font = 'bold 48px "Poppins", "Segoe UI", sans-serif';
-  ctx.fillText('Nom', textX, textY + 180);
-  ctx.font = '500 36px "Poppins", "Segoe UI", sans-serif';
+  ctx.font = 'bold 36px "Poppins", "Segoe UI", sans-serif';
+  ctx.fillText('LastName:', textX, textY + 170);
+  ctx.font = '500 32px "Poppins", "Segoe UI", sans-serif';
   ctx.fillStyle = '#2d3450';
-  ctx.fillText(person.lastName, textX + 20, textY + 220);
+  ctx.fillText(person.lastName, textX + 220, textY + 170);
 
   // Date de naissance
   ctx.fillStyle = '#10152d';
-  ctx.font = 'bold 48px "Poppins", "Segoe UI", sans-serif';
-  ctx.fillText('Né(e) le', textX, textY + 280);
-  ctx.font = '500 36px "Poppins", "Segoe UI", sans-serif';
+  ctx.font = 'bold 36px "Poppins", "Segoe UI", sans-serif';
+  ctx.fillText('Date of Birth:', textX, textY + 240);
+  ctx.font = '500 32px "Poppins", "Segoe UI", sans-serif';
   ctx.fillStyle = '#2d3450';
-  ctx.fillText(person.birthDate, textX + 20, textY + 320);
+  ctx.fillText(person.birthDate, textX + 250, textY + 240);
 
   // Génération badge (coin supérieur droit)
-  const badgeX = canvas.width - 180;
-  const badgeY = 30;
+  const badgeX = canvas.width - 720;
+  const badgeY = 350;
   const badgeWidth = 150;
   const badgeHeight = 50;
 
