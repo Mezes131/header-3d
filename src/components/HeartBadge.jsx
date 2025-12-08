@@ -12,21 +12,21 @@ import ExternalGlow from './ExternalGlow';
 export default function HeartBadge({ position, onHoverChange }) {
   const [hovered, setHovered] = useState(false);
   const adjustedPosition = position;
-  // Scale factor doublé
+  // Doubled scale factor
   const scale = 0.6;
   
-  // Dimensions du cœur
+  // Heart dimensions
   const heartWidth = 1.8;
   const heartHalfWidth = heartWidth / 2; 
   
-  // Scale pour réduire les cœurs de moitié
+  // Scale to reduce hearts by half
   const heartScale = 0.5;
   
-  // Calcul du centre pour centrer les cœurs dans la box
-  // On décale vers la gauche pour centrer
+  // Calculate center to center hearts in the box
+  // Shift left to center
   const centerOffsetX = -(heartHalfWidth * heartScale + 0.08 * heartScale) / 2;
   
-  // Centre vertical
+  // Vertical center
   const centerOffsetY = -((1.3 + (-0.05)) / 2) * heartScale;
   
   const createCircleShape = (radius) => {
@@ -35,13 +35,13 @@ export default function HeartBadge({ position, onHoverChange }) {
     return shape;
   };
 
-  // Fonction pour créer la forme de cœur
+  // Function to create heart shape
   const createHeartShape = (offsetX = 0, offsetY = 0) => {
     const x = offsetX;
     const y = offsetY;
     const heartShape = new Shape();
 
-    // Forme de cœur réduite et centrée
+    // Reduced and centered heart shape
     heartShape.moveTo(x + 0, y + 0.25);
     heartShape.bezierCurveTo(x + 0, y + 0.25, x - 0.3, y - 0.05, x - 0.6, y + 0.25);
     heartShape.bezierCurveTo(x - 0.9, y + 0.5, x - 0.65, y + 1.0, x, y + 1.3);
@@ -51,19 +51,19 @@ export default function HeartBadge({ position, onHoverChange }) {
     return heartShape;
   };
 
-  // Géométrie pour le premier cœur (rose)
+  // Geometry for first heart (pink)
   const heart1Geometry = useMemo(() => {
     const heartShape = createHeartShape();
     return new ShapeGeometry(heartShape, 64);
   }, []);
 
-  // Géométrie pour le deuxième cœur (rouge, légèrement décalé)
+  // Geometry for second heart (red, slightly offset)
   const heart2Geometry = useMemo(() => {
     const heartShape = createHeartShape(0.08, 0.05);
     return new ShapeGeometry(heartShape, 64);
   }, []);
 
-  // Shell circulaire avec bordure (équivalent RoundedBox)
+  // Circular shell with border (equivalent to RoundedBox)
   const shellGeometry = useMemo(() => {
     const outer = createCircleShape(HEART_BADGE_RADIUS);
     const inner = createCircleShape(HEART_BADGE_RADIUS - HEART_BADGE_BORDER);
@@ -77,7 +77,7 @@ export default function HeartBadge({ position, onHoverChange }) {
     return geometry;
   }, []);
 
-  // Faces avant/arrière
+  // Front/back faces
   const faceGeometry = useMemo(() => {
     const faceShape = createCircleShape(HEART_BADGE_RADIUS - HEART_BADGE_BORDER + HEART_BADGE_FACE_INSET);
     return new ShapeGeometry(faceShape, 64);
@@ -103,22 +103,22 @@ export default function HeartBadge({ position, onHoverChange }) {
         if (onHoverChange) onHoverChange(false);
       }}
     >
-      {/* Shell circulaire (bordure épaisse) */}
+      {/* Circular shell (thick border) */}
       <mesh geometry={shellGeometry} castShadow>
         <meshStandardMaterial color="#ff4fa3" metalness={0.35} roughness={0.4} side={DoubleSide} />
       </mesh>
 
-      {/* Face avant */}
+      {/* Front face */}
       <mesh geometry={faceGeometry} position={[0, 0, frontFaceZ]} castShadow>
         <meshStandardMaterial color="#ffffff" metalness={0.08} roughness={0.25} side={DoubleSide} />
       </mesh>
 
-      {/* Face arrière */}
+      {/* Back face */}
       <mesh geometry={faceGeometry} position={[0, 0, backFaceZ]} rotation={[0, Math.PI, 0]} castShadow>
         <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.35} side={DoubleSide} />
       </mesh>
 
-      {/* Premier cœur (rouge) */}
+      {/* First heart (red) */}
       <mesh 
         geometry={heart1Geometry} 
         position={[ 0.08 * heartScale + centerOffsetX, centerOffsetY, heartsZ]}
@@ -128,7 +128,7 @@ export default function HeartBadge({ position, onHoverChange }) {
         <meshStandardMaterial color="#ff9ec5" metalness={0.2} roughness={0.2} side={DoubleSide} />
       </mesh>
 
-      {/* Deuxième cœur (rose) */}
+      {/* Second heart (pink) */}
       <mesh 
         geometry={heart2Geometry} 
         position={[heartHalfWidth * heartScale + centerOffsetX, centerOffsetY, heartsZ + 0.003]}

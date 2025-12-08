@@ -57,14 +57,14 @@ function buildShellGeometry() {
   return geometry;
 }
 
-// Créer la texture de la carte d'identité
+// Create the identity card texture
 function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
   const canvas = document.createElement('canvas');
   canvas.width = 800;
   canvas.height = 500;
   const ctx = canvas.getContext('2d');
 
-  // Fond avec dégradé
+  // Background with gradient
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
   const [start, end] = genderPalette[person.gender].background;
   gradient.addColorStop(0, start);
@@ -72,7 +72,7 @@ function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Bordure arrondie
+  // Rounded border
   const borderRadius = 30;
   ctx.strokeStyle = genderPalette[person.gender].border;
   ctx.lineWidth = 8;
@@ -90,20 +90,20 @@ function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
   ctx.closePath();
   ctx.stroke();
 
-  // Zone avatar (côté gauche)
+  // Avatar area (left side)
   const avatarSize = 200;
   const avatarX = 60;
   const avatarY = (canvas.height - avatarSize) / 2 - 50;
-  const avatarRadius = 20; // Rayon des coins arrondis
-  const padding = 10; // Padding autour de l'avatar
+  const avatarRadius = 20; // Corner radius
+  const padding = 10; // Padding around the avatar
 
-  // Fond rectangulaire arrondi pour l'avatar
+  // Rounded rectangular background for the avatar
   ctx.fillStyle = genderPalette[person.gender].accent;
   ctx.beginPath();
   ctx.roundRect(avatarX - padding, avatarY - padding, avatarSize + padding * 2, avatarSize + padding * 2, avatarRadius);
   ctx.fill();
 
-  // Dessiner l'avatar si disponible
+  // Draw the avatar if available
   if (avatarImage) {
     ctx.save();
     ctx.beginPath();
@@ -113,17 +113,17 @@ function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
     ctx.restore();
   }
 
-  // Zone texte (côté droit)
+  // Text area (right side)
   const textX = avatarX + avatarSize + 60;
   const textY = 120;
 
-  // Titre "IDENTITÉ"
+  // Title "IDENTITY"
   ctx.fillStyle = genderPalette[person.gender].accent;
   ctx.font = 'bold 32px "Poppins", "Segoe UI", sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText('IDENTITY', textX, textY);
 
-  // Ligne de séparation
+  // Separator line
   ctx.strokeStyle = genderPalette[person.gender].accent;
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -131,7 +131,7 @@ function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
   ctx.lineTo(textX + 300, textY + 15);
   ctx.stroke();
 
-  // Prénom
+  // First name
   ctx.fillStyle = '#10152d';
   ctx.font = 'bold 36px "Poppins", "Segoe UI", sans-serif';
   ctx.fillText('First Name:', textX, textY + 100);
@@ -155,7 +155,7 @@ function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
   ctx.fillStyle = '#2d3450';
   ctx.fillText(person.birthDate, textX + 250, textY + 240);
 
-  // Génération badge (coin supérieur droit)
+  // Generation badge (top right corner)
   const badgeX = canvas.width - 720;
   const badgeY = 350;
   const badgeWidth = 150;
@@ -170,7 +170,7 @@ function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
   ctx.textAlign = 'center';
   ctx.fillText(`Gen. ${person.generation}`, badgeX + badgeWidth / 2, badgeY + badgeHeight / 2 + 10);
 
-  // Bouton de fermeture (croix) au coin supérieur droit
+  // Close button (cross) at top right corner
   const closeButtonSize = 50;
   const closeButtonX = canvas.width - closeButtonSize - 30;
   const closeButtonY = 30;
@@ -178,34 +178,34 @@ function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
   const crossSize = 20;
   const crossThickness = 4;
 
-  // Couleur du bouton : plus vive au hover
+  // Button color: brighter on hover
   let buttonColor = genderPalette[person.gender].accent;
   if (isButtonHovered) {
-    // Couleur plus vive : augmenter la luminosité
+    // Brighter color: increase brightness
     if (person.gender === 'male') {
-      buttonColor = '#4a9aff'; // Plus clair que #2c7bff
+      buttonColor = '#4a9aff'; // Lighter than #2c7bff
     } else {
-      buttonColor = '#ff6bb8'; // Plus clair que #ff4fa3
+      buttonColor = '#ff6bb8'; // Lighter than #ff4fa3
     }
   }
 
-  // Cercle de fond du bouton
+  // Button background circle
   ctx.fillStyle = buttonColor;
   ctx.beginPath();
   ctx.arc(closeButtonX + closeButtonRadius, closeButtonY + closeButtonRadius, closeButtonRadius, 0, Math.PI * 2);
   ctx.fill();
 
-  // Ombre portée pour effet de profondeur
+  // Drop shadow for depth effect
   ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
   ctx.shadowBlur = 8;
   ctx.shadowOffsetX = 2;
   ctx.shadowOffsetY = 2;
 
-  // Dessiner la croix
+  // Draw the cross
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = crossThickness;
   ctx.lineCap = 'round';
-  ctx.shadowColor = 'transparent'; // Réinitialiser l'ombre pour la croix
+  ctx.shadowColor = 'transparent'; // Reset shadow for the cross
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
   ctx.shadowOffsetY = 0;
@@ -215,10 +215,10 @@ function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
   const halfCross = crossSize / 2;
 
   ctx.beginPath();
-  // Ligne diagonale de haut-gauche à bas-droite
+  // Diagonal line from top-left to bottom-right
   ctx.moveTo(centerX - halfCross, centerY - halfCross);
   ctx.lineTo(centerX + halfCross, centerY + halfCross);
-  // Ligne diagonale de haut-droite à bas-gauche
+  // Diagonal line from top-right to bottom-left
   ctx.moveTo(centerX + halfCross, centerY - halfCross);
   ctx.lineTo(centerX - halfCross, centerY + halfCross);
   ctx.stroke();
@@ -237,7 +237,7 @@ export default function CardView({ person, onClose, onClosing }) {
   const [avatarImage, setAvatarImage] = useState(null);
   const [buttonHovered, setButtonHovered] = useState(false);
 
-  // Charger l'avatar de manière asynchrone
+  // Load avatar asynchronously
   useEffect(() => {
     const avatarPath = person.gender === 'male' 
       ? avatarMale 
@@ -260,30 +260,29 @@ export default function CardView({ person, onClose, onClosing }) {
     [person.gender],
   );
 
-  // Animation d'entrée
+  // Entry animation
   useEffect(() => {
     setMounted(true);
     setIsClosing(false);
   }, []);
 
-  // Fonction pour fermer avec animation
+  // Function to close with animation
   const handleClose = () => {
     setIsClosing(true);
-    // Informer immédiatement le parent que la fermeture commence (pour synchroniser la caméra)
+    // Immediately inform parent that closing starts (to synchronize camera)
     if (onClosing) onClosing();
-    // Attendre que l'animation de fermeture soit terminée avant d'appeler onClose
-    // Avec lerpFactor 0.15, l'animation prend environ 500-600ms pour atteindre scale 0.1
+    // With lerpFactor 0.15, animation takes approximately 500-600ms to reach scale 0.1
     setTimeout(() => {
       if (onClose) onClose();
-    }, 600);
+    }, 200);
   };
 
-  // Animation de position, scale et rotation
+  // Position, scale and rotation animation
   useFrame(() => {
     if (!groupRef.current) return;
 
     if (isClosing) {
-      // Animation de fermeture : zoom out et retour à la position initiale
+      // Closing animation: zoom out and return to initial position
       const targetScale = 0.1;
       const targetY = 0;
       const targetZ = 0;
@@ -307,7 +306,7 @@ export default function CardView({ person, onClose, onClosing }) {
       const newRotation = currentRotation + (targetRotation - currentRotation) * lerpFactor;
       groupRef.current.rotation.y = newRotation;
     } else if (mounted) {
-      // Animation d'ouverture : zoom in depuis très petit
+      // Opening animation: zoom in from very small
       const targetScale = 1;
       const targetY = 2;
       const targetZ = 3;
@@ -333,7 +332,7 @@ export default function CardView({ person, onClose, onClosing }) {
     }
   });
 
-  // Géométrie de la face
+  // Face geometry
   const faceGeometry = useMemo(() => {
     const width = ID_CARD_WIDTH;
     const height = ID_CARD_HEIGHT;
@@ -394,7 +393,7 @@ export default function CardView({ person, onClose, onClosing }) {
         />
       </mesh>
 
-      {/* Bouton de fermeture invisible (coin supérieur droit) */}
+      {/* Invisible close button (top right corner) */}
       <mesh
         position={[
           ID_CARD_WIDTH / 2 - 0.25 - 0.05, 
@@ -427,7 +426,7 @@ export default function CardView({ person, onClose, onClosing }) {
         />
       </mesh>
 
-      {/* Face arrière */}
+      {/* Back face */}
       <mesh
         geometry={faceGeometry}
         position={[0, 0, -ID_CARD_DEPTH / 2 + FACE_INSET]}

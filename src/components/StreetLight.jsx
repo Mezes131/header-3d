@@ -9,62 +9,62 @@ const LAMP_RADIUS = 0.4;
 const BASE_RADIUS = 0.2;
 const BASE_HEIGHT = 0.3;
 
-// Position du lampadaire pour éclairer l'arbre généalogique
+// Street light position to illuminate the family tree
 const LIGHT_POSITION = [7, -4.6, 0.5];
 
-// Position cible de l'arbre généalogique 
+// Family tree target position
 const TREE_TARGET = [0, 0.3, 0];
 
-// Couleur de la lumière
+// Light color
 const LIGHT_COLOR = '#fff0e1';
 
 export default function StreetLight({ onHoverChange }) {
   const [hovered, setHovered] = useState(false);
 
-  // Géométrie du poteau
+  // Pole geometry
   const poleGeometry = useMemo(
     () => new CylinderGeometry(POLE_RADIUS, POLE_RADIUS, POLE_HEIGHT, 16),
     []
   );
 
-  // Géométrie de la base
+  // Base geometry
   const baseGeometry = useMemo(
     () => new CylinderGeometry(BASE_RADIUS, BASE_RADIUS * 1.2, BASE_HEIGHT, 16),
     []
   );
 
-  // Géométrie de la lampe (sphère)
+  // Lamp geometry (sphere)
   const lampGeometry = useMemo(() => new SphereGeometry(LAMP_RADIUS, 16, 16), []);
 
-  // Géométrie du toit de la lampe (cône inversé)
+  // Lamp top geometry (inverted cone)
   const lampTopGeometry = useMemo(
     () => new ConeGeometry(LAMP_RADIUS * 0.9, 0.3, 16),
     []
   );
 
-  // Géométrie du support de la lampe
+  // Lamp support geometry
   const lampSupportGeometry = useMemo(
     () => new CylinderGeometry(0.1, 0.1, 0.2, 16),
     []
   );
 
-  // Référence pour le spotLight
+  // Reference for spotLight
   const spotLightRef = useRef();
   const targetRef = useRef(new Object3D());
 
-  // Position de la lampe dans l'espace local
+  // Lamp position in local space
   const lampPosition = [0, BASE_HEIGHT + POLE_HEIGHT + LAMP_RADIUS * 0.3, 0];
 
-  // Configuration de la cible du spotLight pour pointer vers l'arbre généalogique
+  // Configure spotLight target to point towards family tree
   useEffect(() => {
     if (spotLightRef.current) {
-      // Calculer la direction vers la cible (position absolue dans la scène)
-      // Le lampadaire est dans un group à LIGHT_POSITION, donc on calcule la direction relative
+      // Calculate direction towards target (absolute position in scene)
+      // Street light is in a group at LIGHT_POSITION, so calculate relative direction
       const targetX = TREE_TARGET[0] - LIGHT_POSITION[0];
       const targetY = TREE_TARGET[1] - LIGHT_POSITION[1];
       const targetZ = TREE_TARGET[2] - LIGHT_POSITION[2];
       
-      // Positionner la cible dans l'espace local du group
+      // Position target in group's local space
       targetRef.current.position.set(targetX, targetY, targetZ);
       spotLightRef.current.target = targetRef.current;
     }
@@ -84,7 +84,7 @@ export default function StreetLight({ onHoverChange }) {
         if (onHoverChange) onHoverChange(false);
       }}
     >
-      {/* Base du lampadaire */}
+      {/* Street light base */}
       <mesh
         geometry={baseGeometry}
         position={[0, BASE_HEIGHT / 2, 0]}
@@ -94,7 +94,7 @@ export default function StreetLight({ onHoverChange }) {
         <meshStandardMaterial color="#2a2f4a" roughness={0.7} metalness={0.3} />
       </mesh>
 
-      {/* Poteau principal */}
+      {/* Main pole */}
       <mesh
         geometry={poleGeometry}
         position={[0, BASE_HEIGHT + POLE_HEIGHT / 2, 0]}
@@ -103,7 +103,7 @@ export default function StreetLight({ onHoverChange }) {
         <meshStandardMaterial color="#3a3f5a" roughness={0.6} metalness={0.4} />
       </mesh>
 
-      {/* Support de la lampe (petit cylindre) */}
+      {/* Lamp support (small cylinder) */}
       <mesh
         geometry={lampSupportGeometry}
         position={[0, BASE_HEIGHT + POLE_HEIGHT - 0.1, 0]}
@@ -112,7 +112,7 @@ export default function StreetLight({ onHoverChange }) {
         <meshStandardMaterial color="#2a2f4a" roughness={0.7} metalness={0.3} />
       </mesh>
 
-      {/* Lampe (sphère lumineuse) */}
+      {/* Lamp (luminous sphere) */}
       <mesh
         geometry={lampGeometry}
         position={[0, BASE_HEIGHT + POLE_HEIGHT + LAMP_RADIUS * 0.3, 0]}
@@ -127,7 +127,7 @@ export default function StreetLight({ onHoverChange }) {
         />
       </mesh>
 
-      {/* Toit de la lampe */}
+      {/* Lamp top */}
       <mesh
         geometry={lampTopGeometry}
         position={[0, BASE_HEIGHT + POLE_HEIGHT + LAMP_RADIUS * 0.8, 0]}
@@ -137,7 +137,7 @@ export default function StreetLight({ onHoverChange }) {
         <meshStandardMaterial color="#2a2f4a" roughness={0.7} metalness={0.3} />
       </mesh>
 
-      {/* Lumière principale pointLight - éclairage général depuis la lampe */}
+      {/* Main pointLight - general lighting from the lamp */}
       <pointLight
         position={[0, BASE_HEIGHT + POLE_HEIGHT + LAMP_RADIUS * 0.3, 0]}
         color={LIGHT_COLOR}
@@ -151,7 +151,7 @@ export default function StreetLight({ onHoverChange }) {
         shadow-bias={-0.0001}
       />
 
-      {/* Lumière spotLight - éclairage directionnel vers l'arbre généalogique */}
+      {/* spotLight - directional lighting towards family tree */}
       <spotLight
         ref={spotLightRef}
         position={lampPosition}
@@ -168,7 +168,7 @@ export default function StreetLight({ onHoverChange }) {
         shadow-bias={-0.8}
       />
 
-      {/* Lumière supplémentaire pour éclairer le sol et créer des réflexions */}
+      {/* Additional light to illuminate the floor and create reflections */}
       <pointLight
         position={[0, BASE_HEIGHT + POLE_HEIGHT + LAMP_RADIUS * 0.3, 0]}
         color={LIGHT_COLOR}

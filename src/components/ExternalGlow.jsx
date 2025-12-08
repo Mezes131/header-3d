@@ -6,11 +6,11 @@ import { CARD_WIDTH, CARD_HEIGHT, CARD_DEPTH } from '../constants/layout';
 import { HEART_BADGE_RADIUS, HEART_BADGE_DEPTH } from '../constants/layout';
 
 const GLOW_INTENSITY = 1.5;
-const GLOW_SIZE_MULTIPLIER = 1.12; // Taille du halo par rapport à l'objet
-const GLOW_THICKNESS = 0.08; // Épaisseur du halo
-let GLOW_LAYERS = 3; // Nombre de couches pour un effet de dégradé
+const GLOW_SIZE_MULTIPLIER = 1.12; // Glow size relative to object
+const GLOW_THICKNESS = 0.08; // Glow thickness
+let GLOW_LAYERS = 3; // Number of layers for gradient effect
 
-// Fonction pour créer une forme rectangulaire arrondie (pour PersonCard)
+// Function to create a rounded rectangular shape (for PersonCard)
 function createRoundedRectShape(width, height, radius) {
   const hw = width / 2;
   const hh = height / 2;
@@ -29,7 +29,7 @@ function createRoundedRectShape(width, height, radius) {
   return shape;
 }
 
-// Fonction pour créer une forme circulaire (pour HeartBadge)
+// Function to create a circular shape (for HeartBadge)
 function createCircleShape(radius) {
   const shape = new Shape();
   shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
@@ -40,11 +40,11 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
   const meshRefs = useRef([]);
   const opacityRef = useRef(0);
 
-  // Animation de l'opacité pour un effet fluide
+  // Opacity animation for smooth effect
   useFrame(() => {
     const targetOpacity = hovered ? GLOW_INTENSITY : 0;
     opacityRef.current += (targetOpacity - opacityRef.current) * 0.15;
-    // Mettre à jour tous les matériaux des couches
+    // Update all layer materials
     meshRefs.current.forEach((mesh) => {
       if (mesh && mesh.material) {
         mesh.material.opacity = opacityRef.current * (mesh.userData.baseOpacity || 1);
@@ -53,11 +53,11 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
     });
   });
 
-  // Position du halo selon le type
+  // Glow position according to type
   const glowPosition = useMemo(() => {
     switch (type) {
       case 'light': {
-        // Position au niveau de la lampe
+        // Position at lamp level
         const POLE_HEIGHT = 8;
         const BASE_HEIGHT = 0.3;
         const LAMP_RADIUS = 0.4;
@@ -68,12 +68,12 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
     }
   }, [type]);
 
-  // Créer plusieurs couches pour un effet de dégradé
+  // Create multiple layers for gradient effect
   const glowLayers = useMemo(() => {
     const layers = [];
     for (let i = 0; i < GLOW_LAYERS; i++) {
-      const layerSize = GLOW_SIZE_MULTIPLIER + (i * 0.03); // Chaque couche est légèrement plus grande
-      const layerOpacity = 0.6 / (i + 1); // Opacité décroissante pour chaque couche
+      const layerSize = GLOW_SIZE_MULTIPLIER + (i * 0.03); // Each layer is slightly larger
+      const layerOpacity = 0.6 / (i + 1); // Decreasing opacity for each layer
       
       let layerGeometry;
       switch (type) {
@@ -144,7 +144,7 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
           }}
           geometry={layer.geometry}
           position={glowPosition}
-          renderOrder={-1 - index} // Rendre en premier pour être derrière l'objet
+          renderOrder={-1 - index} // Render first to be behind the object
         >
           <meshBasicMaterial
             color="#ffffff"

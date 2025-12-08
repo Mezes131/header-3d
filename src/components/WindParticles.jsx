@@ -4,12 +4,12 @@ import { BufferGeometry, Float32BufferAttribute } from 'three';
 
 const PARTICLE_COUNT = 500;
 const WIND_SPEED = 0.02;
-const WIND_DIRECTION = [0.3, 0.1, -0.2]; // Direction du vent (x, y, z)
+const WIND_DIRECTION = [0.3, 0.1, -0.2]; // Wind direction (x, y, z)
 const PARTICLE_SIZE = 0.05;
 const PARTICLE_AREA = {
-  x: [-9, 9],   // Zone horizontale
-  y: [-4, 6],   // Zone verticale
-  z: [-9, 9],   // Zone profondeur
+  x: [-9, 9],   // Horizontal area
+  y: [-4, 6],   // Vertical area
+  z: [-9, 9],   // Depth area
 };
 
 function randomInRange(min, max) {
@@ -24,14 +24,14 @@ export default function WindParticles() {
   const pointsRef = useRef();
   const velocitiesRef = useRef();
 
-  // Initialisation des positions et vitesses des particules
+  // Initialize particle positions and velocities
   const positions = useMemo(() => {
     const pos = new Float32Array(PARTICLE_COUNT * 3);
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const i3 = i * 3;
 
-      // Position aléatoire dans la zone définie
+      // Random position in defined area
       pos[i3] = randomInRange(PARTICLE_AREA.x[0], PARTICLE_AREA.x[1]);
       pos[i3 + 1] = randomInRange(PARTICLE_AREA.y[0], PARTICLE_AREA.y[1]);
       pos[i3 + 2] = randomInRange(PARTICLE_AREA.z[0], PARTICLE_AREA.z[1]);
@@ -40,14 +40,14 @@ export default function WindParticles() {
     return pos;
   }, []);
 
-  // Initialisation des vitesses des particules
+  // Initialize particle velocities
   const velocities = useMemo(() => {
     const vel = new Float32Array(PARTICLE_COUNT * 3);
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const i3 = i * 3;
 
-      // Vitesse initiale avec variation aléatoire
+      // Initial velocity with random variation
       const windVariation = 0.3;
       vel[i3] = WIND_DIRECTION[0] * WIND_SPEED + randomVariation(windVariation) * WIND_SPEED;
       vel[i3 + 1] = WIND_DIRECTION[1] * WIND_SPEED + randomVariation(windVariation) * WIND_SPEED;
@@ -57,12 +57,12 @@ export default function WindParticles() {
     return vel;
   }, []);
 
-  // Mettre à jour la ref après le rendu initial
+  // Update ref after initial render
   useLayoutEffect(() => {
     velocitiesRef.current = velocities;
   }, [velocities]);
 
-  // Animation des particules
+  // Particle animation
   useFrame((state) => {
     if (!pointsRef.current) return;
 
@@ -73,18 +73,18 @@ export default function WindParticles() {
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const i3 = i * 3;
 
-      // Ajouter un mouvement sinusoïdal pour simuler les turbulences du vent
+      // Add sinusoidal movement to simulate wind turbulence
       const turbulence = 0.01;
       const waveX = Math.sin(time * 2 + i * 0.1) * turbulence;
       const waveY = Math.cos(time * 1.5 + i * 0.15) * turbulence;
       const waveZ = Math.sin(time * 1.8 + i * 0.12) * turbulence;
 
-      // Mise à jour de la position avec le vent et les turbulences
+      // Update position with wind and turbulence
       positions[i3] += velocities[i3] + waveX;
       positions[i3 + 1] += velocities[i3 + 1] + waveY;
       positions[i3 + 2] += velocities[i3 + 2] + waveZ;
 
-      // Réinitialiser la particule si elle sort de la zone
+      // Reset particle if it leaves the area
       if (positions[i3] > PARTICLE_AREA.x[1]) {
         positions[i3] = PARTICLE_AREA.x[0];
         positions[i3 + 1] = randomInRange(PARTICLE_AREA.y[0], PARTICLE_AREA.y[1]);
@@ -108,11 +108,11 @@ export default function WindParticles() {
       }
     }
 
-    // Mettre à jour la géométrie
+    // Update geometry
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
   });
 
-  // Création de la géométrie
+  // Create geometry
   const geometry = useMemo(() => {
     const geom = new BufferGeometry();
     geom.setAttribute('position', new Float32BufferAttribute(positions, 3));

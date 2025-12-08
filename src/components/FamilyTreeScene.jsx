@@ -15,25 +15,25 @@ import CardView from './CardView';
 import { people, links } from '../data/family';
 import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layout';
 
-// Composant pour animer la caméra
+// Component to animate the camera
 function CameraController({ selectedPerson, isClosing, controlsRef }) {
   const { camera } = useThree();
   const isAnimatingRef = useRef(false);
 
   useEffect(() => {
     if (selectedPerson && !isClosing) {
-      // Animation d'ouverture
+      // Opening animation
       isAnimatingRef.current = true;
       
-      // Désactiver les contrôles pendant l'animation
+      // Disable controls during animation
       if (controlsRef.current) {
         controlsRef.current.enabled = false;
       }
     } else if (isClosing) {
-      // Animation de fermeture - démarrer immédiatement
+      // Closing animation - start immediately
       isAnimatingRef.current = true;
       
-      // Désactiver les contrôles pendant l'animation
+      // Disable controls during animation
       if (controlsRef.current) {
         controlsRef.current.enabled = false;
       }
@@ -46,7 +46,7 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
     const lerpFactor = 0.08;
     
     if (selectedPerson && !isClosing) {
-      // Animation d'ouverture : zoomer sur le CardView
+      // Opening animation: zoom on CardView
       const targetPosition = [0, 2.5, 8];
       const targetTarget = [0, 2, 3];
       
@@ -61,7 +61,7 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
         controlsRef.current.update();
       }
       
-      // Vérifier si l'animation est terminée
+      // Check if animation is finished
       const distance = Math.sqrt(
         Math.pow(targetPosition[0] - camera.position.x, 2) +
         Math.pow(targetPosition[1] - camera.position.y, 2) +
@@ -69,13 +69,13 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
       );
       if (distance < 0.05) {
         isAnimatingRef.current = false;
-        // Réactiver les contrôles après l'animation
+        // Re-enable controls after animation
         if (controlsRef.current) {
           controlsRef.current.enabled = true;
         }
       }
     } else if (isClosing || !selectedPerson) {
-      // Animation de fermeture : retour à la position initiale
+      // Closing animation: return to initial position
       const targetPosition = CAMERA_CONFIG.position;
       const targetTarget = CONTROLS_CONFIG.target;
       
@@ -90,7 +90,7 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
         controlsRef.current.update();
       }
       
-      // Vérifier si l'animation est terminée
+      // Check if animation is finished
       const distance = Math.sqrt(
         Math.pow(targetPosition[0] - camera.position.x, 2) +
         Math.pow(targetPosition[1] - camera.position.y, 2) +
@@ -98,7 +98,7 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
       );
       if (distance < 0.05) {
         isAnimatingRef.current = false;
-        // Réactiver les contrôles après l'animation
+        // Re-enable controls after animation
         if (controlsRef.current) {
           controlsRef.current.enabled = true;
         }
@@ -114,19 +114,19 @@ function SceneContents({ controlsRef }) {
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
 
-  // Désactiver le zoom/dézoom lorsque le CardView est affiché
+  // Disable zoom/unzoom when CardView is displayed
   useEffect(() => {
     if (controlsRef.current) {
       if (selectedPerson) {
-        // Désactiver le zoom/dézoom quand le CardView est ouvert
+        // Disable zoom/unzoom when CardView is open
         controlsRef.current.enableZoom = false;
         controlsRef.current.enableRotate = true;
         controlsRef.current.enablePan = false;
       } else {
-        // Réactiver les contrôles quand le CardView est fermé
+        // Re-enable controls when CardView is closed
         controlsRef.current.enableZoom = true;
         controlsRef.current.enableRotate = true;
-        controlsRef.current.enablePan = false; // enablePan est toujours false selon CONTROLS_CONFIG
+        controlsRef.current.enablePan = false; // enablePan is always false according to CONTROLS_CONFIG
       }
     }
   }, [selectedPerson, controlsRef]);
@@ -143,7 +143,7 @@ function SceneContents({ controlsRef }) {
   return (
     <>
       <color attach="background" args={['#111530']} />
-      {/* Lumière d'ambiance globale sans ombres */}
+      {/* Global ambient light without shadows */}
       <ambientLight intensity={0.6} />
       <directionalLight
         position={[5, 8, 5]}
@@ -152,7 +152,7 @@ function SceneContents({ controlsRef }) {
       />
       <directionalLight position={[-4, 3, -2]} intensity={0.3} />
 
-      {/* Décor de la scène */}
+      {/* Scene decoration */}
       <Floor />
       <StreetLight
         onHoverChange={(isHovered) => {
@@ -161,26 +161,26 @@ function SceneContents({ controlsRef }) {
       />
       <WindParticles />
 
-      {/* Texte de statut 3D au-dessus de la scène */}
+      {/* 3D status text above the scene */}
       <BounceAnimator amplitude={0.3} speed={1.8} axis="z">
         <SceneStatusText text={statusText} />
       </BounceAnimator>
       
-      {/* Murs de brique */}
-      {/* Mur arrière */}
+      {/* Brick walls */}
+      {/* Back wall */}
       <BrickWall
         position={[0, -4.1, -10]}
         rotation={[0, 0, 0]}
         width={20}
       />
-      {/* Mur droit */}
+      {/* Right wall */}
       <BrickWall
         position={[10, -4.1, 0]}
         rotation={[0, Math.PI / 2, 0]}
         width={20}
       />
 
-      {/* Arbre généalogique */}
+      {/* Family tree */}
       <BounceAnimator amplitude={0.3} speed={1.8}>
         <group>
           {people.map((person) => {
@@ -211,7 +211,7 @@ function SceneContents({ controlsRef }) {
         </group>
       </BounceAnimator>
 
-      {/* CardView affichée lorsqu'une personne est sélectionnée */}
+      {/* CardView displayed when a person is selected */}
       {selectedPerson && (
         <CardView
           person={selectedPerson}
@@ -220,7 +220,7 @@ function SceneContents({ controlsRef }) {
         />
       )}
 
-      {/* Contrôleur de caméra pour l'animation */}
+      {/* Camera controller for animation */}
       <CameraController selectedPerson={selectedPerson} isClosing={isClosing} controlsRef={controlsRef} />
 
     </>

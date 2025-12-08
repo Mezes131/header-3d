@@ -7,40 +7,40 @@ const WALL_THICKNESS = 0.3;
 const MORTAR_THICKNESS = 0.02;
 
 export default function BrickWall({ position, rotation, width }) {
-  // Création d'une texture de brique procédurale
+  // Create procedural brick texture
   const brickTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    const brickPatternWidth = 200; // Largeur du motif de brique
-    const brickPatternHeight = 100; // Hauteur du motif de brique
+    const brickPatternWidth = 200; // Brick pattern width
+    const brickPatternHeight = 100; // Brick pattern height
     
     canvas.width = brickPatternWidth;
     canvas.height = brickPatternHeight;
     const ctx = canvas.getContext('2d');
 
-    // Couleur de base des briques (bleu brique)
+    // Base brick colors (brick blue)
     const brickColor1 = '#132f8b'; 
     const brickColor2 = '#2d35a0'; 
     const brickColor3 = '#3f57cd'; 
     const mortarColor = '#5b5e6b'; 
 
-    // Fond (mortier)
+    // Background (mortar)
     ctx.fillStyle = mortarColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Dessiner les briques en damier
+    // Draw bricks in checkerboard pattern
     const brickRows = 2;
     const brickCols = 4;
     const brickW = (canvas.width - MORTAR_THICKNESS * (brickCols + 1)) / brickCols;
     const brickH = (canvas.height - MORTAR_THICKNESS * (brickRows + 1)) / brickRows;
 
     for (let row = 0; row < brickRows; row++) {
-      const offsetX = row % 2 === 0 ? 0 : brickW / 2; // Décalage pour motif en damier
+      const offsetX = row % 2 === 0 ? 0 : brickW / 2; // Offset for checkerboard pattern
       
       for (let col = 0; col < brickCols + 1; col++) {
         const x = offsetX + col * brickW + MORTAR_THICKNESS;
         const y = row * brickH + MORTAR_THICKNESS;
         
-        // Alterner les couleurs pour plus de réalisme
+        // Alternate colors for more realism
         const colorIndex = (row + col) % 3;
         let brickColor;
         switch (colorIndex) {
@@ -57,7 +57,7 @@ export default function BrickWall({ position, rotation, width }) {
         ctx.fillStyle = brickColor;
         ctx.fillRect(x, y, brickW - MORTAR_THICKNESS, brickH - MORTAR_THICKNESS);
         
-        // Ajouter des détails (lignes de texture)
+        // Add details (texture lines)
         ctx.strokeStyle = '#212965';
         ctx.lineWidth = 0.5;
         ctx.strokeRect(x, y, brickW - MORTAR_THICKNESS, brickH - MORTAR_THICKNESS);

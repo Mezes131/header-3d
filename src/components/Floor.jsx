@@ -3,25 +3,25 @@ import { CanvasTexture, RepeatWrapping } from 'three';
 
 const FLOOR_SIZE = 20;
 const FLOOR_Y = -4.6;
-const FLOOR_THICKNESS = 0.2; // Épaisseur du sol pour le rendre 3D
+const FLOOR_THICKNESS = 0.2; // Floor thickness to make it 3D
 const FLOOR_TILE_REPEAT = 8;
 
 export default function Floor() {
-  // Création d'une texture de sol avec un motif de grille
+  // Create floor texture with grid pattern
   const floorTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext('2d');
 
-    // Fond principal avec dégradé subtil
+    // Main background with subtle gradient
     const gradient = ctx.createLinearGradient(0, 0, 512, 512);
     gradient.addColorStop(0, '#fffaf3');
     gradient.addColorStop(1, '#fffaff');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 512, 512);
 
-    // Motif de grille subtil
+    // Subtle grid pattern
     ctx.strokeStyle = '#2d3450';
     ctx.lineWidth = 1.5;
     

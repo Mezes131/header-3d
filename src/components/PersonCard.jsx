@@ -214,40 +214,40 @@ export default function PersonCard({ person, onHoverChange, onClick }) {
     [person.gender],
   );
 
-  // Valeurs cibles pour l'animation
+  // Target values for animation
   const targetScale = hovered ? 1.04 : 1;
   const targetZ = hovered ? 0.08 : 0;
   const targetBackScale = hovered ? 1.05 : 1;
   const targetEmissiveIntensity = hovered ? 0.15 : 0;
   const targetBackEmissiveIntensity = hovered ? 0.2 : 0;
 
-  // Animation smooth avec interpolation
+  // Smooth animation with interpolation
   useFrame(() => {
     if (!groupRef.current || !backFaceRef.current) return;
 
-    // Interpolation linéaire pour un mouvement fluide (lerp factor: 0.15)
+    // Linear interpolation for smooth movement (lerp factor: 0.15)
     const lerpFactor = 0.15;
     
-    // Animer le scale du group
+    // Animate group scale
     const currentScale = groupRef.current.scale.x;
     const newScale = currentScale + (targetScale - currentScale) * lerpFactor;
     groupRef.current.scale.set(newScale, newScale, newScale);
 
-    // Animer la position Z
+    // Animate Z position
     const currentZ = groupRef.current.position.z - person.position[2];
     const newZ = currentZ + (targetZ - currentZ) * lerpFactor;
     groupRef.current.position.z = person.position[2] + newZ;
 
-    // Animer le scale de la face arrière
+    // Animate back face scale
     const currentBackScale = backFaceRef.current.scale.x;
     const newBackScale = currentBackScale + (targetBackScale - currentBackScale) * lerpFactor;
     backFaceRef.current.scale.set(newBackScale, newBackScale, newBackScale);
 
-    // Animer l'intensité de l'émission
+    // Animate emission intensity
     emissiveIntensityRef.current += (targetEmissiveIntensity - emissiveIntensityRef.current) * lerpFactor;
     backEmissiveIntensityRef.current += (targetBackEmissiveIntensity - backEmissiveIntensityRef.current) * lerpFactor;
 
-    // Mettre à jour les matériaux directement
+    // Update materials directly
     if (shellMaterialRef.current) {
       shellMaterialRef.current.emissiveIntensity = emissiveIntensityRef.current;
       if (hovered) {

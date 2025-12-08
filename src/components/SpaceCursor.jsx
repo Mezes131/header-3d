@@ -28,7 +28,7 @@ export default function SpaceCursor() {
       const newPosition = { x: e.clientX, y: e.clientY };
       setPosition(newPosition);
 
-      // Créer des particules de traînée si le curseur bouge
+      // Create trail particles if cursor moves
       if (isInScene) {
         const now = Date.now();
         const timeSinceLastParticle = now - lastParticleTimeRef.current;
@@ -37,14 +37,14 @@ export default function SpaceCursor() {
           Math.pow(newPosition.y - lastPositionRef.current.y, 2)
         );
 
-        // Créer plusieurs particules tous les 4ms ou tous les 1.5 pixels pour une densité plus élevée
+        // Create multiple particles every 4ms or every 1.5 pixels for higher density
         if (timeSinceLastParticle > 4 && distance > 1.5) {
-          // Créer 2-3 particules à la fois pour augmenter la densité
+          // Create 2-3 particles at once to increase density
           const particleCount = Math.floor(distance / 2) + 1;
           const newParticles = [];
           
           for (let i = 0; i < Math.min(particleCount, 3); i++) {
-            // Ajouter un peu de variation aléatoire à la position
+            // Add some random variation to position
             const offsetX = (Math.random() - 0.5) * 10;
             const offsetY = (Math.random() - 0.5) * 10;
             
@@ -53,13 +53,13 @@ export default function SpaceCursor() {
               x: newPosition.x + offsetX,
               y: newPosition.y + offsetY,
               size: Math.random() * 2 + 1.5,
-              createdAt: now + i * 2, // Légère variation temporelle
+              createdAt: now + i * 2, // Slight temporal variation
             });
           }
 
           setTrailParticles((prev) => {
             const updated = [...prev, ...newParticles];
-            // Garder max 100 particules pour une traînée plus dense
+            // Keep max 100 particles for denser trail
             return updated.slice(-80);
           });
 
@@ -80,14 +80,14 @@ export default function SpaceCursor() {
     };
   }, [isInScene]);
 
-  // Nettoyer les particules après leur animation
+  // Clean particles after their animation
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
       setTrailParticles((prev) => 
         prev.filter((p) => {
           const elapsed = now - p.createdAt;
-          return elapsed < 1200; // Garder les particules pendant 1.2 secondes
+          return elapsed < 1200; // Keep particles for 1.2 seconds
         })
       );
     }, 100);
@@ -97,7 +97,7 @@ export default function SpaceCursor() {
 
   return (
     <>
-      {/* Traînée de poussière d'étoile */}
+      {/* Star dust trail */}
       {trailParticles.map((particle) => (
         <div
           key={particle.id}
@@ -111,7 +111,7 @@ export default function SpaceCursor() {
         />
       ))}
 
-      {/* Curseur principal */}
+      {/* Main cursor */}
       {isInScene && (
         <div
           className="space-cursor"
@@ -120,7 +120,7 @@ export default function SpaceCursor() {
             top: `${position.y}px`,
           }}
         >
-          {/* Nébuleuse planétaire centrale */}
+          {/* Central planetary nebula */}
           <div className="planetary-nebula">
             <div className="nebula-core"></div>
             <div className="nebula-layer nebula-layer-1"></div>
@@ -129,7 +129,7 @@ export default function SpaceCursor() {
             <div className="nebula-glow-inner"></div>
           </div>
 
-          {/* Étoiles orbitantes */}
+          {/* Orbiting stars */}
           <div className="star star-1"></div>
           <div className="star star-2"></div>
           <div className="star star-3"></div>
@@ -137,7 +137,7 @@ export default function SpaceCursor() {
           <div className="star star-5"></div>
           <div className="star star-6"></div>
 
-          {/* Nébuleuse/glow autour */}
+          {/* Nebula/glow around */}
           <div className="nebula-glow"></div>
         </div>
       )}
