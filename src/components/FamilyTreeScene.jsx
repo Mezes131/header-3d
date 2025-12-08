@@ -19,7 +19,13 @@ import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layou
 // Component to animate the camera
 function CameraController({ selectedPerson, isClosing, controlsRef }) {
   const { camera } = useThree();
+  const cameraRef = useRef(camera);
   const isAnimatingRef = useRef(false);
+
+  // Update camera ref when camera changes
+  useEffect(() => {
+    cameraRef.current = camera;
+  }, [camera]);
 
   useEffect(() => {
     if (selectedPerson && !isClosing) {
@@ -45,15 +51,16 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
     if (!isAnimatingRef.current) return;
 
     const lerpFactor = 0.08;
+    const cam = cameraRef.current;
     
     if (selectedPerson && !isClosing) {
       // Opening animation: zoom on CardView
       const targetPosition = [0, 2.5, 8];
       const targetTarget = [0, 2, 3];
       
-      camera.position.x += (targetPosition[0] - camera.position.x) * lerpFactor;
-      camera.position.y += (targetPosition[1] - camera.position.y) * lerpFactor;
-      camera.position.z += (targetPosition[2] - camera.position.z) * lerpFactor;
+      cam.position.x += (targetPosition[0] - cam.position.x) * lerpFactor;
+      cam.position.y += (targetPosition[1] - cam.position.y) * lerpFactor;
+      cam.position.z += (targetPosition[2] - cam.position.z) * lerpFactor;
       
       if (controlsRef.current) {
         controlsRef.current.target.x += (targetTarget[0] - controlsRef.current.target.x) * lerpFactor;
@@ -64,9 +71,9 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
       
       // Check if animation is finished
       const distance = Math.sqrt(
-        Math.pow(targetPosition[0] - camera.position.x, 2) +
-        Math.pow(targetPosition[1] - camera.position.y, 2) +
-        Math.pow(targetPosition[2] - camera.position.z, 2)
+        Math.pow(targetPosition[0] - cam.position.x, 2) +
+        Math.pow(targetPosition[1] - cam.position.y, 2) +
+        Math.pow(targetPosition[2] - cam.position.z, 2)
       );
       if (distance < 0.05) {
         isAnimatingRef.current = false;
@@ -80,9 +87,9 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
       const targetPosition = CAMERA_CONFIG.position;
       const targetTarget = CONTROLS_CONFIG.target;
       
-      camera.position.x += (targetPosition[0] - camera.position.x) * lerpFactor;
-      camera.position.y += (targetPosition[1] - camera.position.y) * lerpFactor;
-      camera.position.z += (targetPosition[2] - camera.position.z) * lerpFactor;
+      cam.position.x += (targetPosition[0] - cam.position.x) * lerpFactor;
+      cam.position.y += (targetPosition[1] - cam.position.y) * lerpFactor;
+      cam.position.z += (targetPosition[2] - cam.position.z) * lerpFactor;
       
       if (controlsRef.current) {
         controlsRef.current.target.x += (targetTarget[0] - controlsRef.current.target.x) * lerpFactor;
@@ -93,9 +100,9 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
       
       // Check if animation is finished
       const distance = Math.sqrt(
-        Math.pow(targetPosition[0] - camera.position.x, 2) +
-        Math.pow(targetPosition[1] - camera.position.y, 2) +
-        Math.pow(targetPosition[2] - camera.position.z, 2)
+        Math.pow(targetPosition[0] - cam.position.x, 2) +
+        Math.pow(targetPosition[1] - cam.position.y, 2) +
+        Math.pow(targetPosition[2] - cam.position.z, 2)
       );
       if (distance < 0.05) {
         isAnimatingRef.current = false;

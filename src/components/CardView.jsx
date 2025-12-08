@@ -232,7 +232,8 @@ function createIdCardTexture(person, avatarImage, isButtonHovered = false) {
 export default function CardView({ person, onClose, onClosing }) {
   const groupRef = useRef();
   const shellMaterialRef = useRef();
-  const [mounted, setMounted] = useState(false);
+  const prevPersonIdRef = useRef(person.id);
+  const [mounted, setMounted] = useState(true);
   const [isClosing, setIsClosing] = useState(false);
   const [avatarImage, setAvatarImage] = useState(null);
   const [buttonHovered, setButtonHovered] = useState(false);
@@ -254,17 +255,23 @@ export default function CardView({ person, onClose, onClosing }) {
     img.src = avatarPath;
   }, [person.gender]);
 
+  // Reset mounted state when person changes
+  useEffect(() => {
+    if (prevPersonIdRef.current !== person.id) {
+      prevPersonIdRef.current = person.id;
+      // Use setTimeout to avoid calling setState synchronously in effect
+      setTimeout(() => {
+        setMounted(true);
+        setIsClosing(false);
+      }, 0);
+    }
+  }, [person.id]);
+
   const faceTexture = useMemo(() => createIdCardTexture(person, avatarImage, buttonHovered), [person, avatarImage, buttonHovered]);
   const emissive = useMemo(
     () => new Color(person.gender === 'male' ? '#9fbfff' : '#ffc1df'),
     [person.gender],
   );
-
-  // Entry animation
-  useEffect(() => {
-    setMounted(true);
-    setIsClosing(false);
-  }, []);
 
   // Function to close with animation
   const handleClose = () => {

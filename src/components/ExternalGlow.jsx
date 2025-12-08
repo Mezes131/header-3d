@@ -8,7 +8,20 @@ import { HEART_BADGE_RADIUS, HEART_BADGE_DEPTH } from '../constants/layout';
 const GLOW_INTENSITY = 1.5;
 const GLOW_SIZE_MULTIPLIER = 1.12; // Glow size relative to object
 const GLOW_THICKNESS = 0.08; // Glow thickness
-let GLOW_LAYERS = 3; // Number of layers for gradient effect
+
+// Function to get number of layers based on type
+function getGlowLayers(type) {
+  switch (type) {
+    case 'card':
+      return 4;
+    case 'badge':
+      return 15;
+    case 'light':
+      return 3;
+    default:
+      return 3;
+  }
+}
 
 // Function to create a rounded rectangular shape (for PersonCard)
 function createRoundedRectShape(width, height, radius) {
@@ -71,14 +84,15 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
   // Create multiple layers for gradient effect
   const glowLayers = useMemo(() => {
     const layers = [];
-    for (let i = 0; i < GLOW_LAYERS; i++) {
+    const numLayers = getGlowLayers(type);
+    
+    for (let i = 0; i < numLayers; i++) {
       const layerSize = GLOW_SIZE_MULTIPLIER + (i * 0.03); // Each layer is slightly larger
       const layerOpacity = 0.6 / (i + 1); // Decreasing opacity for each layer
       
       let layerGeometry;
       switch (type) {
         case 'card': {
-          GLOW_LAYERS = 4;
           const outerWidth = CARD_WIDTH * layerSize;
           const outerHeight = CARD_HEIGHT * layerSize;
           const outerRadius = (60 / 512) * outerWidth;
@@ -99,7 +113,6 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
           break;
         }
         case 'badge': {
-          GLOW_LAYERS = 15;
           const outerRadius = HEART_BADGE_RADIUS * layerSize;
           const innerRadius = HEART_BADGE_RADIUS * (layerSize - 0.05);
 
@@ -116,7 +129,6 @@ export default function ExternalGlow({ hovered, type = 'card' }) {
           break;
         }
         case 'light': {
-          GLOW_LAYERS = 3;
           const lampRadius = 0.4;
           const glowRadius = lampRadius * layerSize * 1.5;
           layerGeometry = new SphereGeometry(glowRadius, 32, 32);
