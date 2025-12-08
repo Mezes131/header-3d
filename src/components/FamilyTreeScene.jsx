@@ -8,10 +8,11 @@ import HeartBadge from './HeartBadge';
 import Floor from './Floor';
 import StreetLight from './StreetLight';
 import BrickWall from './BrickWall';
-import WindParticles from './WindParticles';
+//import WindParticles from './WindParticles';
 import BounceAnimator from './BounceAnimator';
 import SceneStatusText from './SceneStatusText';
 import CardView from './CardView';
+import Starfield from './Starfield';
 import { people, links } from '../data/family';
 import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layout';
 
@@ -143,6 +144,10 @@ function SceneContents({ controlsRef }) {
   return (
     <>
       <color attach="background" args={['#111530']} />
+      
+      {/* Starfield with slow rotation */}
+      <Starfield />
+      
       {/* Global ambient light without shadows */}
       <ambientLight intensity={0.6} />
       <directionalLight
@@ -159,7 +164,7 @@ function SceneContents({ controlsRef }) {
           setStatusText(isHovered ? 'Street light' : 'Click on a family member');
         }}
       />
-      <WindParticles />
+      {/* <WindParticles /> */}
 
       {/* 3D status text above the scene */}
       <BounceAnimator amplitude={0.3} speed={1.8} axis="z">
