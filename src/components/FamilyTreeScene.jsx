@@ -1,6 +1,7 @@
-import { Suspense, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Suspense, useState, useRef, useEffect } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, ContactShadows } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import PersonCard from './PersonCard';
 import RelationshipLink from './RelationshipLink';
 import HeartBadge from './HeartBadge';
@@ -14,9 +15,130 @@ import CardView from './CardView';
 import { people, links } from '../data/family';
 import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layout';
 
-function SceneContents() {
+// Composant pour animer la caméra
+function CameraController({ selectedPerson, isClosing, controlsRef }) {
+  const { camera } = useThree();
+  const isAnimatingRef = useRef(false);
+
+  useEffect(() => {
+    if (selectedPerson && !isClosing) {
+      // Animation d'ouverture
+      isAnimatingRef.current = true;
+      
+      // Désactiver les contrôles pendant l'animation
+      if (controlsRef.current) {
+        controlsRef.current.enabled = false;
+      }
+    } else if (isClosing) {
+      // Animation de fermeture - démarrer immédiatement
+      isAnimatingRef.current = true;
+      
+      // Désactiver les contrôles pendant l'animation
+      if (controlsRef.current) {
+        controlsRef.current.enabled = false;
+      }
+    }
+  }, [selectedPerson, isClosing, controlsRef]);
+
+  useFrame(() => {
+    if (!isAnimatingRef.current) return;
+
+    const lerpFactor = 0.08;
+    
+    if (selectedPerson && !isClosing) {
+      // Animation d'ouverture : zoomer sur le CardView
+      const targetPosition = [0, 2.5, 8];
+      const targetTarget = [0, 2, 3];
+      
+      camera.position.x += (targetPosition[0] - camera.position.x) * lerpFactor;
+      camera.position.y += (targetPosition[1] - camera.position.y) * lerpFactor;
+      camera.position.z += (targetPosition[2] - camera.position.z) * lerpFactor;
+      
+      if (controlsRef.current) {
+        controlsRef.current.target.x += (targetTarget[0] - controlsRef.current.target.x) * lerpFactor;
+        controlsRef.current.target.y += (targetTarget[1] - controlsRef.current.target.y) * lerpFactor;
+        controlsRef.current.target.z += (targetTarget[2] - controlsRef.current.target.z) * lerpFactor;
+        controlsRef.current.update();
+      }
+      
+      // Vérifier si l'animation est terminée
+      const distance = Math.sqrt(
+        Math.pow(targetPosition[0] - camera.position.x, 2) +
+        Math.pow(targetPosition[1] - camera.position.y, 2) +
+        Math.pow(targetPosition[2] - camera.position.z, 2)
+      );
+      if (distance < 0.05) {
+        isAnimatingRef.current = false;
+        // Réactiver les contrôles après l'animation
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true;
+        }
+      }
+    } else if (isClosing || !selectedPerson) {
+      // Animation de fermeture : retour à la position initiale
+      const targetPosition = CAMERA_CONFIG.position;
+      const targetTarget = CONTROLS_CONFIG.target;
+      
+      camera.position.x += (targetPosition[0] - camera.position.x) * lerpFactor;
+      camera.position.y += (targetPosition[1] - camera.position.y) * lerpFactor;
+      camera.position.z += (targetPosition[2] - camera.position.z) * lerpFactor;
+      
+      if (controlsRef.current) {
+        controlsRef.current.target.x += (targetTarget[0] - controlsRef.current.target.x) * lerpFactor;
+        controlsRef.current.target.y += (targetTarget[1] - controlsRef.current.target.y) * lerpFactor;
+        controlsRef.current.target.z += (targetTarget[2] - controlsRef.current.target.z) * lerpFactor;
+        controlsRef.current.update();
+      }
+      
+      // Vérifier si l'animation est terminée
+      const distance = Math.sqrt(
+        Math.pow(targetPosition[0] - camera.position.x, 2) +
+        Math.pow(targetPosition[1] - camera.position.y, 2) +
+        Math.pow(targetPosition[2] - camera.position.z, 2)
+      );
+      if (distance < 0.05) {
+        isAnimatingRef.current = false;
+        // Réactiver les contrôles après l'animation
+        if (controlsRef.current) {
+          controlsRef.current.enabled = true;
+        }
+      }
+    }
+  });
+
+  return null;
+}
+
+function SceneContents({ controlsRef }) {
   const [statusText, setStatusText] = useState('Click on a family member');
   const [selectedPerson, setSelectedPerson] = useState(null);
+  const [isClosing, setIsClosing] = useState(false);
+
+  // Désactiver le zoom/dézoom lorsque le CardView est affiché
+  useEffect(() => {
+    if (controlsRef.current) {
+      if (selectedPerson) {
+        // Désactiver le zoom/dézoom quand le CardView est ouvert
+        controlsRef.current.enableZoom = false;
+        controlsRef.current.enableRotate = true;
+        controlsRef.current.enablePan = false;
+      } else {
+        // Réactiver les contrôles quand le CardView est fermé
+        controlsRef.current.enableZoom = true;
+        controlsRef.current.enableRotate = true;
+        controlsRef.current.enablePan = false; // enablePan est toujours false selon CONTROLS_CONFIG
+      }
+    }
+  }, [selectedPerson, controlsRef]);
+
+  const handleCardClose = () => {
+    setSelectedPerson(null);
+    setIsClosing(false);
+  };
+
+  const handleCardClosing = () => {
+    setIsClosing(true);
+  };
 
   return (
     <>
@@ -72,6 +194,7 @@ function SceneContents() {
                 }}
                 onClick={(person) => {
                   setSelectedPerson(person);
+                  setIsClosing(false);
                 }}
               />
             );
@@ -92,21 +215,28 @@ function SceneContents() {
       {selectedPerson && (
         <CardView
           person={selectedPerson}
-          onClose={() => setSelectedPerson(null)}
+          onClose={handleCardClose}
+          onClosing={handleCardClosing}
         />
       )}
+
+      {/* Contrôleur de caméra pour l'animation */}
+      <CameraController selectedPerson={selectedPerson} isClosing={isClosing} controlsRef={controlsRef} />
 
     </>
   );
 }
 
 export default function FamilyTreeScene() {
+  const controlsRef = useRef();
+
   return (
     <Canvas camera={CAMERA_CONFIG} shadows>
       <Suspense fallback={null}>
-        <SceneContents />
+        <SceneContents controlsRef={controlsRef} />
       </Suspense>
       <OrbitControls 
+        ref={controlsRef}
         {...CONTROLS_CONFIG}
         enableDamping={true}
         dampingFactor={0.05}
