@@ -27,5 +27,3 @@ export default function SceneStatusText({ text }) {
 SceneStatusText.propTypes = {
   text: PropTypes.string.isRequired,
 };
-
-

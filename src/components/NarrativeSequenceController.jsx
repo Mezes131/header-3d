@@ -31,11 +31,33 @@ const NarrativeSequenceContext = createContext({
 });
 
 // Hook to use narrative sequence context
+// Returns default values if context is not available (for backward compatibility)
 export const useNarrativeSequence = () => {
   const context = useContext(NarrativeSequenceContext);
-  if (!context) {
-    throw new Error('useNarrativeSequence must be used within NarrativeSequenceController');
+  
+  // Return default context if not available (allows components to work without controller)
+  if (!context || !context.getSequenceElapsedTime) {
+    return {
+      sequenceState: SEQUENCE_STATES.INTRO,
+      currentStep: 0,
+      elapsedTime: 0,
+      isPaused: false,
+      transitionTo: () => {},
+      pause: () => {},
+      resume: () => {},
+      reset: () => {},
+      updateStep: () => {},
+      getSequenceElapsedTime: () => Date.now(), // Return current time as fallback
+      SEQUENCE_STATES,
+      SEQUENCE_TIMINGS: {
+        INTRO_DURATION: 3000,
+        REVEAL_DURATION: 3000,
+        INTERACTION_DURATION: 4000,
+        AUTO_TRANSITION_DELAY: 2000,
+      },
+    };
   }
+  
   return context;
 };
 
@@ -56,21 +78,34 @@ export default function NarrativeSequenceController({
   const animationFrameRef = useRef(null);
   const sequenceStartTimeRef = useRef(null);
 
-  // Initialize sequence timing
-  useEffect(() => {
-    if (autoStart && !isPaused) {
-      startTimeRef.current = Date.now();
-      sequenceStartTimeRef.current = Date.now();
-      accumulatedPauseTimeRef.current = 0;
-      startAnimationLoop();
+  // Transition to a specific sequence state
+  const transitionTo = useCallback((newState, step = 0) => {
+    if (!Object.values(SEQUENCE_STATES).includes(newState)) {
+      console.warn(`Invalid sequence state: ${newState}`);
+      return;
     }
+
+    setSequenceState(newState);
+    setCurrentStep(step);
+    sequenceStartTimeRef.current = Date.now();
     
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [autoStart, isPaused]);
+    // Call callback if provided
+    if (onSequenceChange) {
+      onSequenceChange(newState, step);
+    }
+  }, [onSequenceChange]);
+
+  // Handle automatic transitions based on elapsed time
+  const handleAutoTransitions = useCallback((elapsed) => {
+    if (sequenceState === SEQUENCE_STATES.INTRO && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION) {
+      transitionTo(SEQUENCE_STATES.REVEAL);
+    } else if (sequenceState === SEQUENCE_STATES.REVEAL && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION) {
+      transitionTo(SEQUENCE_STATES.INTERACTION);
+    } else if (sequenceState === SEQUENCE_STATES.INTERACTION && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION + SEQUENCE_TIMINGS.INTERACTION_DURATION) {
+      // Auto-transition to conclusion only if no interaction happened
+      // This will be handled by manual transition when user clicks
+    }
+  }, [sequenceState, transitionTo]);
 
   // Animation loop to track elapsed time
   const startAnimationLoop = useCallback(() => {
@@ -88,36 +123,23 @@ export default function NarrativeSequenceController({
     };
     
     animationFrameRef.current = requestAnimationFrame(updateTime);
-  }, [isPaused]);
+  }, [isPaused, handleAutoTransitions]);
 
-  // Handle automatic transitions based on elapsed time
-  const handleAutoTransitions = useCallback((elapsed) => {
-    if (sequenceState === SEQUENCE_STATES.INTRO && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION) {
-      transitionTo(SEQUENCE_STATES.REVEAL);
-    } else if (sequenceState === SEQUENCE_STATES.REVEAL && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION) {
-      transitionTo(SEQUENCE_STATES.INTERACTION);
-    } else if (sequenceState === SEQUENCE_STATES.INTERACTION && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION + SEQUENCE_TIMINGS.INTERACTION_DURATION) {
-      // Auto-transition to conclusion only if no interaction happened
-      // This will be handled by manual transition when user clicks
+  // Initialize sequence timing
+  useEffect(() => {
+    if (autoStart && !isPaused) {
+      startTimeRef.current = Date.now();
+      sequenceStartTimeRef.current = Date.now();
+      accumulatedPauseTimeRef.current = 0;
+      startAnimationLoop();
     }
-  }, [sequenceState]);
-
-  // Transition to a specific sequence state
-  const transitionTo = useCallback((newState, step = 0) => {
-    if (!Object.values(SEQUENCE_STATES).includes(newState)) {
-      console.warn(`Invalid sequence state: ${newState}`);
-      return;
-    }
-
-    setSequenceState(newState);
-    setCurrentStep(step);
-    sequenceStartTimeRef.current = Date.now();
     
-    // Call callback if provided
-    if (onSequenceChange) {
-      onSequenceChange(newState, step);
-    }
-  }, [onSequenceChange]);
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [autoStart, isPaused, startAnimationLoop]);
 
   // Pause the sequence
   const pause = useCallback(() => {

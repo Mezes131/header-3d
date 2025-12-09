@@ -1,10 +1,14 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { BufferGeometry, Float32BufferAttribute, Color } from 'three';
+import { useNarrativeSequence, SEQUENCE_STATES } from './NarrativeSequenceController';
 
 const STAR_COUNT = 3000;
 const STARFIELD_RADIUS = 100;
-const ROTATION_SPEED = 0.0003; // Slow rotation speed
+const ROTATION_SPEED_NORMAL = 0.0003; // Slow rotation speed
+const ROTATION_SPEED_SLOW = 0.0001; // Slower rotation during discovery
+const FADE_IN_DURATION = 2000; // 2 seconds for fade-in
+const TARGET_OPACITY = 0.8; // Target opacity after fade-in
 
 // Simple seeded random number generator for deterministic results
 function seededRandom(seed) {
@@ -18,6 +22,11 @@ function randomInRange(min, max, seed) {
 
 export default function Starfield() {
   const groupRef = useRef();
+  const opacityRef = useRef(0);
+  const narrativeContext = useNarrativeSequence();
+  const sequenceState = narrativeContext?.sequenceState || SEQUENCE_STATES.INTRO;
+  const elapsedTime = narrativeContext?.elapsedTime || 0;
+  
   // Use a fixed seed value to avoid calling Math.random() during render
   const INITIAL_SEED = 12345;
 
@@ -71,10 +80,36 @@ export default function Starfield() {
     return layers;
   }, []);
 
-  // Slow rotation animation
+  // Calculate opacity based on sequence state and elapsed time
+  const calculateOpacity = () => {
+    if (sequenceState === SEQUENCE_STATES.INTRO) {
+      // Fade-in during intro (0 to TARGET_OPACITY over FADE_IN_DURATION)
+      const fadeProgress = Math.min(elapsedTime / FADE_IN_DURATION, 1);
+      return fadeProgress * TARGET_OPACITY;
+    }
+    // After intro, maintain target opacity
+    return TARGET_OPACITY;
+  };
+
+  // Calculate rotation speed based on sequence state
+  const getRotationSpeed = () => {
+    if (sequenceState === SEQUENCE_STATES.DISCOVERY) {
+      // Slow down rotation during discovery (CardView open)
+      return ROTATION_SPEED_SLOW;
+    }
+    return ROTATION_SPEED_NORMAL;
+  };
+
+  // Slow rotation animation with dynamic speed
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += ROTATION_SPEED;
+      // Update rotation speed
+      groupRef.current.rotation.y += getRotationSpeed();
+      
+      // Update opacity smoothly
+      const targetOpacity = calculateOpacity();
+      const lerpFactor = 0.05; // Smooth opacity transition
+      opacityRef.current += (targetOpacity - opacityRef.current) * lerpFactor;
     }
   });
 
@@ -90,18 +125,24 @@ export default function Starfield() {
 
   return (
     <group ref={groupRef}>
-      {geometries.map((geometry, index) => (
-        <points key={index} geometry={geometry}>
-          <pointsMaterial
-            size={0.3 + index * 0.1} // Small stars like tiny bright points
-            sizeAttenuation={true}
-            vertexColors={true}
-            transparent
-            opacity={0.8 + index * 0.05}
-            alphaTest={0.1}
-          />
-        </points>
-      ))}
+      {geometries.map((geometry, index) => {
+        // Calculate opacity for this layer (base opacity + layer offset, clamped by narrative opacity)
+        const baseOpacity = TARGET_OPACITY + index * 0.05;
+        const layerOpacity = Math.min(opacityRef.current * (baseOpacity / TARGET_OPACITY), baseOpacity);
+        
+        return (
+          <points key={index} geometry={geometry}>
+            <pointsMaterial
+              size={0.3 + index * 0.1} // Small stars like tiny bright points
+              sizeAttenuation={true}
+              vertexColors={true}
+              transparent
+              opacity={layerOpacity}
+              alphaTest={0.1}
+            />
+          </points>
+        );
+      })}
     </group>
   );
 }
