@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Shape, ShapeGeometry, ExtrudeGeometry, DoubleSide } from 'three';
+import { useFrame } from '@react-three/fiber';
 import {
   HEART_BADGE_RADIUS,
   HEART_BADGE_DEPTH,
@@ -8,12 +9,105 @@ import {
   HEART_BADGE_FACE_INSET,
 } from '../constants/layout';
 import ExternalGlow from './ExternalGlow';
+import BounceAnimator from './BounceAnimator';
+import { useNarrativeSequence, SEQUENCE_STATES } from './NarrativeSequenceController';
 
-export default function HeartBadge({ position, onHoverChange }) {
+export default function HeartBadge({ position, onHoverChange, appearDelay = 0, sequenceState }) {
   const [hovered, setHovered] = useState(false);
   const adjustedPosition = position;
   // Doubled scale factor
-  const scale = 0.6;
+  const baseScale = 0.6;
+  
+  // Narrative sequence state
+  const narrativeContext = useNarrativeSequence();
+  const currentSequenceState = sequenceState || narrativeContext?.sequenceState || SEQUENCE_STATES.INTRO;
+  const elapsedTime = narrativeContext?.elapsedTime || 0;
+  
+  // Appearance animation state
+  const appearStartTimeRef = useRef(null);
+  const appearanceScaleRef = useRef(0);
+  const hasAppearedRef = useRef(false);
+  const groupRef = useRef();
+  
+  // Initialize appearance timing
+  useEffect(() => {
+    if (currentSequenceState === SEQUENCE_STATES.REVEAL && appearStartTimeRef.current === null) {
+      const revealStartTime = 3000; // REVEAL starts at 3s
+      appearStartTimeRef.current = revealStartTime + appearDelay;
+    }
+    // If we're past REVEAL and haven't initialized yet, schedule appearance during REVEAL window
+    // This ensures badge appears progressively even if mounted late
+    else if (
+      (currentSequenceState === SEQUENCE_STATES.INTERACTION || 
+       currentSequenceState === SEQUENCE_STATES.DISCOVERY || 
+       currentSequenceState === SEQUENCE_STATES.CONCLUSION) &&
+      appearStartTimeRef.current === null &&
+      !hasAppearedRef.current
+    ) {
+      // Schedule appearance as if it happened during REVEAL (for progressive appearance)
+      const revealStartTime = 3000;
+      const revealEndTime = revealStartTime + 3000; // REVEAL duration is 3s
+      // Use the reveal end time minus a small delay to ensure it appears before REVEAL ends
+      appearStartTimeRef.current = Math.min(revealEndTime - 200, revealStartTime + appearDelay);
+    }
+    // Reset when going back to INTRO (for testing/reset)
+    if (currentSequenceState === SEQUENCE_STATES.INTRO) {
+      appearStartTimeRef.current = null;
+      hasAppearedRef.current = false;
+      appearanceScaleRef.current = 0;
+    }
+  }, [currentSequenceState, appearDelay, elapsedTime]);
+
+  // Calculate appearance animation progress
+  const getAppearanceProgress = () => {
+    // If already appeared, stay visible (even after REVEAL state)
+    if (hasAppearedRef.current) {
+      return 1;
+    }
+    
+    // If timing not initialized yet, stay invisible
+    if (!appearStartTimeRef.current) {
+      return 0;
+    }
+    
+    const appearanceStart = appearStartTimeRef.current;
+    const appearanceDuration = 1000; // 1 second for appearance animation
+    
+    // If we're past the appearance time, appear
+    if (elapsedTime >= appearanceStart) {
+      const progress = Math.min((elapsedTime - appearanceStart) / appearanceDuration, 1);
+      
+      // Mark as appeared when animation completes
+      if (progress >= 1) {
+        hasAppearedRef.current = true;
+        return 1;
+      }
+      
+      // Scale animation: 0 → 1.1 → 1.0
+      if (progress < 0.5) {
+        // First half: scale from 0 to 1.1
+        return (progress / 0.5) * 1.1;
+      } else {
+        // Second half: scale from 1.1 to 1.0
+        return 1.1 - ((progress - 0.5) / 0.5) * 0.1;
+      }
+    }
+    
+    // Still waiting for appearance time
+    return 0;
+  };
+
+  // Animate appearance scale
+  useFrame(() => {
+    if (groupRef.current) {
+      const targetScale = getAppearanceProgress();
+      const lerpFactor = 0.15;
+      appearanceScaleRef.current += (targetScale - appearanceScaleRef.current) * lerpFactor;
+      groupRef.current.scale.setScalar(appearanceScaleRef.current * baseScale);
+    }
+  });
+  
+  const scale = appearanceScaleRef.current * baseScale;
   
   // Heart dimensions
   const heartWidth = 1.8;
@@ -89,8 +183,8 @@ export default function HeartBadge({ position, onHoverChange }) {
 
   return (
     <group
+      ref={groupRef}
       position={adjustedPosition}
-      scale={3 * scale / 4}
       rotation={[Math.PI, Math.PI, 0]}
       onPointerOver={(e) => {
         e.stopPropagation();
@@ -145,5 +239,7 @@ export default function HeartBadge({ position, onHoverChange }) {
 HeartBadge.propTypes = {
   position: PropTypes.arrayOf(PropTypes.number).isRequired,
   onHoverChange: PropTypes.func,
+  appearDelay: PropTypes.number,
+  sequenceState: PropTypes.string,
 };
 

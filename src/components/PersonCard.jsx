@@ -1,9 +1,10 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { CanvasTexture, Color, ExtrudeGeometry, Float32BufferAttribute, Shape, ShapeGeometry } from 'three';
 import { useFrame } from '@react-three/fiber';
 import { CARD_DEPTH, CARD_HEIGHT, CARD_WIDTH } from '../constants/layout';
 import ExternalGlow from './ExternalGlow';
+import { useNarrativeSequence, SEQUENCE_STATES } from './NarrativeSequenceController';
 
 // RoundedBox takes world units, so convert the 60px design radius to scene space.
 const CARD_CORNER_RADIUS = (60 / 512) * CARD_WIDTH;
@@ -199,7 +200,7 @@ function createCardTexture(person) {
   return texture;
 }
 
-export default function PersonCard({ person, onHoverChange, onClick }) {
+export default function PersonCard({ person, onHoverChange, onClick, appearDelay = 0, sequenceState }) {
   const [hovered, setHovered] = useState(false);
   const groupRef = useRef();
   const backFaceRef = useRef();
@@ -207,6 +208,21 @@ export default function PersonCard({ person, onHoverChange, onClick }) {
   const backFaceMaterialRef = useRef();
   const emissiveIntensityRef = useRef(0);
   const backEmissiveIntensityRef = useRef(0);
+  
+  // Narrative sequence state
+  const narrativeContext = useNarrativeSequence();
+  const currentSequenceState = sequenceState || narrativeContext?.sequenceState || SEQUENCE_STATES.INTRO;
+  const elapsedTime = narrativeContext?.elapsedTime || 0;
+  
+  // Appearance animation state
+  const appearStartTimeRef = useRef(null);
+  const hasAppearedRef = useRef(false);
+  const appearanceScaleRef = useRef(0);
+  const appearanceRotationRef = useRef(0);
+  const appearanceOpacityRef = useRef(0);
+  
+  // Pulse animation for Act 3
+  const pulsePhaseRef = useRef(0);
 
   const texture = useMemo(() => createCardTexture(person), [person]);
   const emissive = useMemo(
@@ -214,16 +230,94 @@ export default function PersonCard({ person, onHoverChange, onClick }) {
     [person.gender],
   );
 
+  // Initialize appearance timing
+  useEffect(() => {
+    // If we're in REVEAL state, schedule appearance
+    if (currentSequenceState === SEQUENCE_STATES.REVEAL && appearStartTimeRef.current === null) {
+      const revealStartTime = 3000; // REVEAL starts at 3s
+      appearStartTimeRef.current = revealStartTime + appearDelay;
+    }
+    // If we're past REVEAL and haven't initialized yet, schedule appearance during REVEAL window
+    // This ensures cards appear progressively even if mounted late
+    else if (
+      (currentSequenceState === SEQUENCE_STATES.INTERACTION || 
+       currentSequenceState === SEQUENCE_STATES.DISCOVERY || 
+       currentSequenceState === SEQUENCE_STATES.CONCLUSION) &&
+      appearStartTimeRef.current === null &&
+      !hasAppearedRef.current
+    ) {
+      // Schedule appearance as if it happened during REVEAL (for progressive appearance)
+      const revealStartTime = 3000;
+      const revealEndTime = revealStartTime + 3000; // REVEAL duration is 3s
+      // Use the reveal end time minus a small delay to ensure it appears before REVEAL ends
+      appearStartTimeRef.current = Math.min(revealEndTime - 200, revealStartTime + appearDelay);
+    }
+    // Reset when going back to INTRO (for testing/reset)
+    if (currentSequenceState === SEQUENCE_STATES.INTRO) {
+      appearStartTimeRef.current = null;
+      hasAppearedRef.current = false;
+      appearanceScaleRef.current = 0;
+    }
+  }, [currentSequenceState, appearDelay, elapsedTime]);
+
+  // Calculate appearance animation progress
+  const getAppearanceProgress = () => {
+    // If already appeared, stay visible (even after REVEAL state)
+    if (hasAppearedRef.current) {
+      return 1;
+    }
+    
+    // If timing not initialized yet, stay invisible
+    if (!appearStartTimeRef.current) {
+      return 0;
+    }
+    
+    const appearanceStart = appearStartTimeRef.current;
+    const appearanceDuration = 800; // 800ms for appearance animation
+    
+    // If we're past the appearance time, appear immediately
+    if (elapsedTime >= appearanceStart) {
+      const progress = Math.min((elapsedTime - appearanceStart) / appearanceDuration, 1);
+      
+      // Mark as appeared when animation completes
+      if (progress >= 1) {
+        hasAppearedRef.current = true;
+        return 1;
+      }
+      
+      return progress;
+    }
+    
+    // Still waiting for appearance time
+    return 0;
+  };
+
   // Target values for animation
-  const targetScale = hovered ? 1.04 : 1;
+  const appearanceProgress = getAppearanceProgress();
+  const baseScale = appearanceProgress; // Scale from 0 to 1
+  
+  // Update appearance scale ref for useFrame
+  appearanceScaleRef.current = baseScale;
+  
+  const pulseScale = currentSequenceState === SEQUENCE_STATES.INTERACTION 
+    ? 1 + Math.sin(pulsePhaseRef.current) * 0.02 // Subtle pulse in interaction state
+    : 1;
+  
+  const targetScale = (hovered ? 1.04 : 1) * baseScale * pulseScale;
   const targetZ = hovered ? 0.08 : 0;
-  const targetBackScale = hovered ? 1.05 : 1;
+  const targetBackScale = (hovered ? 1.05 : 1) * baseScale * pulseScale;
   const targetEmissiveIntensity = hovered ? 0.15 : 0;
   const targetBackEmissiveIntensity = hovered ? 0.2 : 0;
+  const targetRotationY = appearanceProgress < 1 ? (1 - appearanceProgress) * 0.2 : 0; // Slight rotation during appearance
 
   // Smooth animation with interpolation
-  useFrame(() => {
+  useFrame((state, delta) => {
     if (!groupRef.current || !backFaceRef.current) return;
+
+    // Update pulse phase for Act 3
+    if (currentSequenceState === SEQUENCE_STATES.INTERACTION) {
+      pulsePhaseRef.current += delta * 2; // Pulse speed
+    }
 
     // Linear interpolation for smooth movement (lerp factor: 0.15)
     const lerpFactor = 0.15;
@@ -232,6 +326,11 @@ export default function PersonCard({ person, onHoverChange, onClick }) {
     const currentScale = groupRef.current.scale.x;
     const newScale = currentScale + (targetScale - currentScale) * lerpFactor;
     groupRef.current.scale.set(newScale, newScale, newScale);
+
+    // Animate rotation during appearance
+    const currentRotation = groupRef.current.rotation.y;
+    const newRotation = currentRotation + (targetRotationY - currentRotation) * lerpFactor;
+    groupRef.current.rotation.y = newRotation;
 
     // Animate Z position
     const currentZ = groupRef.current.position.z - person.position[2];
@@ -411,6 +510,8 @@ PersonCard.propTypes = {
   }).isRequired,
   onHoverChange: PropTypes.func,
   onClick: PropTypes.func,
+  appearDelay: PropTypes.number,
+  sequenceState: PropTypes.string,
 };
 
 

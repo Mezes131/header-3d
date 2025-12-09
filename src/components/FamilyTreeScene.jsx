@@ -183,7 +183,18 @@ function SceneContents({ controlsRef }) {
   const [statusText, setStatusText] = useState(NARRATIVE_TEXTS.intro);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
-  const { sequenceState, transitionTo } = useNarrativeSequence();
+  const narrativeContext = useNarrativeSequence();
+  const { sequenceState, transitionTo, elapsedTime } = narrativeContext || {};
+  
+  // Debug logs
+  useEffect(() => {
+    //console.log('[SceneContents] Mounted - narrativeContext available:', !!narrativeContext);
+    //console.log('[SceneContents] Initial sequenceState:', sequenceState, 'elapsedTime:', elapsedTime);
+  }, []);
+  
+  useEffect(() => {
+    //console.log('[SceneContents] sequenceState changed:', sequenceState, 'elapsedTime:', elapsedTime);
+  }, [sequenceState, elapsedTime]);
   
   // Update narrative text based on sequence state
   useEffect(() => {
@@ -239,6 +250,7 @@ function SceneContents({ controlsRef }) {
   return (
     <>
       <color attach="background" args={['#111530']} />
+      {/* Ensure background is visible from start */}
       
       {/* Starfield with slow rotation */}
       <Starfield />
@@ -297,12 +309,16 @@ function SceneContents({ controlsRef }) {
       {/* Family tree */}
       <BounceAnimator amplitude={0.3} speed={1.8}>
         <group>
-          {people.map((person) => {
+          {people.map((person, index) => {
             const label = person.generation === 0 ? 'Parent' : 'Child';
+            // Sequential appearance delays: Jean (0ms), Jeanne (800ms), Junior (1600ms)
+            const appearDelay = index * 800;
             return (
               <PersonCard
                 key={person.id}
                 person={person}
+                appearDelay={appearDelay}
+                sequenceState={sequenceState}
                 onHoverChange={(isHovered) => {
                   // Show hover text only if not in intro/reveal sequences
                   if (isHovered && sequenceState !== SEQUENCE_STATES.INTRO && sequenceState !== SEQUENCE_STATES.REVEAL) {
@@ -327,29 +343,44 @@ function SceneContents({ controlsRef }) {
               />
             );
           })}
-          {links.map((link) => (
-            <RelationshipLink key={link.id} start={link.start} end={link.end} />
-          ))}
-          <HeartBadge
-            position={HEART_CENTER}
-            onHoverChange={(isHovered) => {
-              // Show hover text only if not in intro/reveal sequences
-              if (isHovered && sequenceState !== SEQUENCE_STATES.INTRO && sequenceState !== SEQUENCE_STATES.REVEAL) {
-                setStatusText('Spouse Relation');
-              } else if (!isHovered) {
-                // Restore narrative text based on sequence state
-                if (sequenceState === SEQUENCE_STATES.INTRO) {
-                  setStatusText(NARRATIVE_TEXTS.intro);
-                } else if (sequenceState === SEQUENCE_STATES.REVEAL) {
-                  setStatusText(NARRATIVE_TEXTS.reveal);
-                } else if (sequenceState === SEQUENCE_STATES.INTERACTION) {
-                  setStatusText(NARRATIVE_TEXTS.interaction);
-                } else {
-                  setStatusText(DEFAULT_TEXT);
+          {links.map((link, index) => {
+            // Links appear after cards, with delay: first link (1000ms), second (1800ms), third (2600ms)
+            const appearDelay = 1000 + index * 800;
+            return (
+              <RelationshipLink 
+                key={link.id} 
+                start={link.start} 
+                end={link.end}
+                appearDelay={appearDelay}
+                sequenceState={sequenceState}
+                selectedPersonId={selectedPerson?.id}
+              />
+            );
+          })}
+          <BounceAnimator amplitude={0.1} speed={2} axis="y">
+            <HeartBadge
+              position={HEART_CENTER}
+              appearDelay={2500}
+              sequenceState={sequenceState}
+              onHoverChange={(isHovered) => {
+                // Show hover text only if not in intro/reveal sequences
+                if (isHovered && sequenceState !== SEQUENCE_STATES.INTRO && sequenceState !== SEQUENCE_STATES.REVEAL) {
+                  setStatusText('Spouse Relation');
+                } else if (!isHovered) {
+                  // Restore narrative text based on sequence state
+                  if (sequenceState === SEQUENCE_STATES.INTRO) {
+                    setStatusText(NARRATIVE_TEXTS.intro);
+                  } else if (sequenceState === SEQUENCE_STATES.REVEAL) {
+                    setStatusText(NARRATIVE_TEXTS.reveal);
+                  } else if (sequenceState === SEQUENCE_STATES.INTERACTION) {
+                    setStatusText(NARRATIVE_TEXTS.interaction);
+                  } else {
+                    setStatusText(DEFAULT_TEXT);
+                  }
                 }
-              }
-            }}
-          />
+              }}
+            />
+          </BounceAnimator>
         </group>
       </BounceAnimator>
 

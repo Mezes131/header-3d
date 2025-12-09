@@ -81,10 +81,11 @@ export default function NarrativeSequenceController({
   // Transition to a specific sequence state
   const transitionTo = useCallback((newState, step = 0) => {
     if (!Object.values(SEQUENCE_STATES).includes(newState)) {
-      console.warn(`Invalid sequence state: ${newState}`);
+      console.warn(`[NarrativeSequenceController] Invalid sequence state: ${newState}`);
       return;
     }
 
+    console.log(`[NarrativeSequenceController] Transitioning from ${sequenceState} to ${newState} at step ${step}`);
     setSequenceState(newState);
     setCurrentStep(step);
     sequenceStartTimeRef.current = Date.now();
@@ -93,7 +94,7 @@ export default function NarrativeSequenceController({
     if (onSequenceChange) {
       onSequenceChange(newState, step);
     }
-  }, [onSequenceChange]);
+  }, [onSequenceChange, sequenceState]);
 
   // Handle automatic transitions based on elapsed time
   const handleAutoTransitions = useCallback((elapsed) => {
@@ -109,11 +110,17 @@ export default function NarrativeSequenceController({
 
   // Animation loop to track elapsed time
   const startAnimationLoop = useCallback(() => {
+    console.log('[NarrativeSequenceController] Starting animation loop');
     const updateTime = () => {
       if (!isPaused && startTimeRef.current) {
         const now = Date.now();
         const totalElapsed = now - startTimeRef.current - accumulatedPauseTimeRef.current;
         setElapsedTime(totalElapsed);
+        
+        // Debug log every second
+        if (Math.floor(totalElapsed / 1000) !== Math.floor((totalElapsed - 16) / 1000)) {
+          console.log(`[NarrativeSequenceController] elapsedTime: ${totalElapsed}ms, sequenceState: ${sequenceState}`);
+        }
         
         // Auto-transition logic based on elapsed time
         handleAutoTransitions(totalElapsed);
@@ -127,16 +134,20 @@ export default function NarrativeSequenceController({
 
   // Initialize sequence timing
   useEffect(() => {
+    console.log('[NarrativeSequenceController] Initializing - autoStart:', autoStart, 'isPaused:', isPaused, 'initialState:', SEQUENCE_STATES.INTRO);
+    
     if (autoStart && !isPaused) {
       startTimeRef.current = Date.now();
       sequenceStartTimeRef.current = Date.now();
       accumulatedPauseTimeRef.current = 0;
+      console.log('[NarrativeSequenceController] Starting timer at:', startTimeRef.current);
       startAnimationLoop();
     }
     
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        console.log('[NarrativeSequenceController] Cleanup - cancelled animation frame');
       }
     };
   }, [autoStart, isPaused, startAnimationLoop]);

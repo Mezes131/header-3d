@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { BufferGeometry, Float32BufferAttribute, Color } from 'three';
 import { useNarrativeSequence, SEQUENCE_STATES } from './NarrativeSequenceController';
@@ -7,8 +7,9 @@ const STAR_COUNT = 3000;
 const STARFIELD_RADIUS = 100;
 const ROTATION_SPEED_NORMAL = 0.0003; // Slow rotation speed
 const ROTATION_SPEED_SLOW = 0.0001; // Slower rotation during discovery
-const FADE_IN_DURATION = 2000; // 2 seconds for fade-in
+const FADE_IN_DURATION = 3000; // 3 seconds for subtle fade-in (matches INTRO duration)
 const TARGET_OPACITY = 0.8; // Target opacity after fade-in
+const INITIAL_OPACITY = 0.4; // Stars visible from the very beginning
 
 // Simple seeded random number generator for deterministic results
 function seededRandom(seed) {
@@ -22,7 +23,8 @@ function randomInRange(min, max, seed) {
 
 export default function Starfield() {
   const groupRef = useRef();
-  const opacityRef = useRef(0);
+  // Start with visible opacity immediately - stars should be visible from the very beginning
+  const opacityRef = useRef(INITIAL_OPACITY);
   const narrativeContext = useNarrativeSequence();
   const sequenceState = narrativeContext?.sequenceState || SEQUENCE_STATES.INTRO;
   const elapsedTime = narrativeContext?.elapsedTime || 0;
@@ -82,10 +84,13 @@ export default function Starfield() {
 
   // Calculate opacity based on sequence state and elapsed time
   const calculateOpacity = () => {
+    // Stars should be visible from the very beginning (before narration starts)
+    // During INTRO, do a subtle fade-in from INITIAL_OPACITY to TARGET_OPACITY
     if (sequenceState === SEQUENCE_STATES.INTRO) {
-      // Fade-in during intro (0 to TARGET_OPACITY over FADE_IN_DURATION)
+      // Subtle fade-in during intro (start from INITIAL_OPACITY, fade to TARGET_OPACITY over FADE_IN_DURATION)
       const fadeProgress = Math.min(elapsedTime / FADE_IN_DURATION, 1);
-      return fadeProgress * TARGET_OPACITY;
+      const opacity = INITIAL_OPACITY + (TARGET_OPACITY - INITIAL_OPACITY) * fadeProgress;
+      return opacity;
     }
     // After intro, maintain target opacity
     return TARGET_OPACITY;

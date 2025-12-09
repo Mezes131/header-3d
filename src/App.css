@@ -3,7 +3,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(circle at 20% 20%, #ffffff 0%, #f4f6fb 45%, #ecf0f5 100%);
+  background: #111530; /* Dark background matching the 3D scene */
   color: #111530;
   overflow: hidden;
 }
