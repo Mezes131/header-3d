@@ -4,7 +4,7 @@ import { useNarrativeSequence } from './NarrativeSequenceController';
 import '../styles/NarrativeText.css';
 
 const FADE_DURATION = 500; // Duration of fade transition in milliseconds
-const INACTIVITY_TIMEOUT = 5000; // 5 seconds of inactivity before showing text again
+const INACTIVITY_TIMEOUT = 3000; // 5 seconds of inactivity before showing text again
 
 export default function NarrativeText({ text }) {
   const [displayText, setDisplayText] = useState(text);
@@ -20,9 +20,29 @@ export default function NarrativeText({ text }) {
 
   const narrativeContext = useNarrativeSequence();
   const getSequenceElapsedTime = narrativeContext?.getSequenceElapsedTime || (() => Date.now());
+  const sequenceState = narrativeContext?.sequenceState;
+  const SEQUENCE_STATES = narrativeContext?.SEQUENCE_STATES;
 
-  // Handle user interactions (mouse move, click, wheel)
+  // Check if scenario is complete (after INTERACTION act)
+  const isScenarioComplete = sequenceState === SEQUENCE_STATES?.DISCOVERY || 
+                              sequenceState === SEQUENCE_STATES?.CONCLUSION ||
+                              (sequenceState === SEQUENCE_STATES?.INTERACTION && 
+                               narrativeContext?.elapsedTime >= 10000); // After 10s (INTRO + REVEAL + INTERACTION)
+
+  // Handle user interactions (mouse move, click, wheel) - only after scenario is complete
   useEffect(() => {
+    // Only activate interaction detection after scenario is complete
+    if (!isScenarioComplete) {
+      // Reset visibility when scenario is not complete
+      setIsVisible(true);
+      // Clear any existing timeout
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+        inactivityTimeoutRef.current = null;
+      }
+      return;
+    }
+
     const handleInteraction = () => {
       lastInteractionTimeRef.current = Date.now();
       
@@ -45,7 +65,7 @@ export default function NarrativeText({ text }) {
     window.addEventListener('click', handleInteraction);
     window.addEventListener('wheel', handleInteraction);
 
-    // Initial timeout to show text after mount (if no interaction)
+    // Initial timeout to show text after scenario completion (if no interaction)
     inactivityTimeoutRef.current = setTimeout(() => {
       setIsVisible(true);
     }, INACTIVITY_TIMEOUT);
@@ -61,7 +81,7 @@ export default function NarrativeText({ text }) {
         clearTimeout(inactivityTimeoutRef.current);
       }
     };
-  }, []); // Empty dependency array - only set up once on mount
+  }, [isScenarioComplete]); // Re-run when scenario completion status changes
 
   // Initial fade-in on mount
   useEffect(() => {
