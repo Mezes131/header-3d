@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useNarrativeSequence } from './NarrativeSequenceController';
-import './NarrativeText.css';
+import '../styles/NarrativeText.css';
 
 const FADE_DURATION = 500; // Duration of fade transition in milliseconds
 

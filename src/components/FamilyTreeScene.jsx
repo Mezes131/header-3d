@@ -404,7 +404,7 @@ export default function FamilyTreeScene() {
   const controlsRef = useRef();
 
   return (
-    <NarrativeSequenceController>
+    <>
       <Canvas camera={CAMERA_CONFIG} shadows>
         <Suspense fallback={null}>
           <SceneContents controlsRef={controlsRef} />
@@ -417,7 +417,7 @@ export default function FamilyTreeScene() {
         />
       </Canvas>
       <NarrativeTextWrapper />
-    </NarrativeSequenceController>
+    </>
   );
 }
 

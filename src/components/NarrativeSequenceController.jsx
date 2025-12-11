@@ -24,6 +24,9 @@ const NarrativeSequenceContext = createContext({
   currentStep: 0,
   elapsedTime: 0,
   isPaused: false,
+  isReady: false,
+  isLoaderComplete: false,
+  setLoaderComplete: () => {},
   transitionTo: () => {},
   pause: () => {},
   resume: () => {},
@@ -42,6 +45,9 @@ export const useNarrativeSequence = () => {
       currentStep: 0,
       elapsedTime: 0,
       isPaused: false,
+      isReady: false,
+      isLoaderComplete: false,
+      setLoaderComplete: () => {},
       transitionTo: () => {},
       pause: () => {},
       resume: () => {},
@@ -71,12 +77,21 @@ export default function NarrativeSequenceController({
   const [currentStep, setCurrentStep] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [isLoaderComplete, setIsLoaderComplete] = useState(false);
   
   const startTimeRef = useRef(null);
   const pauseTimeRef = useRef(null);
   const accumulatedPauseTimeRef = useRef(0);
   const animationFrameRef = useRef(null);
   const sequenceStartTimeRef = useRef(null);
+  const hasInitializedRef = useRef(false);
+  const sequenceStateRef = useRef(SEQUENCE_STATES.INTRO); // Track current state in ref
+
+  // Update ref when state changes
+  useEffect(() => {
+    sequenceStateRef.current = sequenceState;
+  }, [sequenceState]);
 
   // Transition to a specific sequence state
   const transitionTo = useCallback((newState, step = 0) => {
@@ -85,7 +100,13 @@ export default function NarrativeSequenceController({
       return;
     }
 
-    console.log(`[NarrativeSequenceController] Transitioning from ${sequenceState} to ${newState} at step ${step}`);
+    // Prevent duplicate transitions
+    if (sequenceStateRef.current === newState) {
+      return;
+    }
+
+    console.log(`[NarrativeSequenceController] Transitioning from ${sequenceStateRef.current} to ${newState} at step ${step}`);
+    sequenceStateRef.current = newState; // Update ref immediately
     setSequenceState(newState);
     setCurrentStep(step);
     sequenceStartTimeRef.current = Date.now();
@@ -94,19 +115,20 @@ export default function NarrativeSequenceController({
     if (onSequenceChange) {
       onSequenceChange(newState, step);
     }
-  }, [onSequenceChange, sequenceState]);
+  }, [onSequenceChange]);
 
   // Handle automatic transitions based on elapsed time
   const handleAutoTransitions = useCallback((elapsed) => {
-    if (sequenceState === SEQUENCE_STATES.INTRO && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION) {
+    const currentState = sequenceStateRef.current; // Use ref to get current state
+    if (currentState === SEQUENCE_STATES.INTRO && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION) {
       transitionTo(SEQUENCE_STATES.REVEAL);
-    } else if (sequenceState === SEQUENCE_STATES.REVEAL && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION) {
+    } else if (currentState === SEQUENCE_STATES.REVEAL && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION) {
       transitionTo(SEQUENCE_STATES.INTERACTION);
-    } else if (sequenceState === SEQUENCE_STATES.INTERACTION && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION + SEQUENCE_TIMINGS.INTERACTION_DURATION) {
+    } else if (currentState === SEQUENCE_STATES.INTERACTION && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION + SEQUENCE_TIMINGS.INTERACTION_DURATION) {
       // Auto-transition to conclusion only if no interaction happened
       // This will be handled by manual transition when user clicks
     }
-  }, [sequenceState, transitionTo]);
+  }, [transitionTo]);
 
   // Animation loop to track elapsed time
   const startAnimationLoop = useCallback(() => {
@@ -132,25 +154,43 @@ export default function NarrativeSequenceController({
     animationFrameRef.current = requestAnimationFrame(updateTime);
   }, [isPaused, handleAutoTransitions]);
 
-  // Initialize sequence timing
+  // Wait for first complete render cycle before marking as ready
   useEffect(() => {
-    console.log('[NarrativeSequenceController] Initializing - autoStart:', autoStart, 'isPaused:', isPaused, 'initialState:', SEQUENCE_STATES.INTRO);
+    console.log('[NarrativeSequenceController] Setting up ready check...');
+    requestAnimationFrame(() => {
+      console.log('[NarrativeSequenceController] First frame complete, marking as ready');
+      setIsReady(true);
+    });
+  }, []);
+
+  // Store startAnimationLoop in a ref to avoid dependency issues
+  const startAnimationLoopRef = useRef(startAnimationLoop);
+  useEffect(() => {
+    startAnimationLoopRef.current = startAnimationLoop;
+  }, [startAnimationLoop]);
+
+  // Initialize sequence timing - only start after loader is complete
+  useEffect(() => {
+    console.log('[NarrativeSequenceController] Initializing - autoStart:', autoStart, 'isPaused:', isPaused, 'isReady:', isReady, 'isLoaderComplete:', isLoaderComplete, 'hasInitialized:', hasInitializedRef.current);
     
-    if (autoStart && !isPaused) {
+    // Prevent multiple initializations
+    if (hasInitializedRef.current) {
+      return;
+    }
+    
+    // Wait for both ready AND loader complete before starting
+    if (isReady && isLoaderComplete && autoStart && !isPaused) {
+      hasInitializedRef.current = true;
       startTimeRef.current = Date.now();
       sequenceStartTimeRef.current = Date.now();
       accumulatedPauseTimeRef.current = 0;
       console.log('[NarrativeSequenceController] Starting timer at:', startTimeRef.current);
-      startAnimationLoop();
+      startAnimationLoopRef.current();
     }
     
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        console.log('[NarrativeSequenceController] Cleanup - cancelled animation frame');
-      }
-    };
-  }, [autoStart, isPaused, startAnimationLoop]);
+    // No cleanup needed - we want the animation loop to continue running
+    // The animation frame will only be cancelled on actual unmount or pause
+  }, [isReady, isLoaderComplete, autoStart, isPaused]);
 
   // Pause the sequence
   const pause = useCallback(() => {
@@ -212,6 +252,9 @@ export default function NarrativeSequenceController({
     currentStep,
     elapsedTime,
     isPaused,
+    isReady,
+    isLoaderComplete,
+    setLoaderComplete: setIsLoaderComplete,
     transitionTo,
     pause,
     resume,

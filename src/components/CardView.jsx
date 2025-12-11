@@ -320,18 +320,18 @@ export default function CardView({ person, onClose, onClosing }) {
       const targetRotation = 0;
 
       const lerpFactor = 0.12;
-      
-      const currentScale = groupRef.current.scale.x;
-      const newScale = currentScale + (targetScale - currentScale) * lerpFactor;
-      groupRef.current.scale.set(newScale, newScale, newScale);
+    
+    const currentScale = groupRef.current.scale.x;
+    const newScale = currentScale + (targetScale - currentScale) * lerpFactor;
+    groupRef.current.scale.set(newScale, newScale, newScale);
 
-      const currentY = groupRef.current.position.y;
-      const newY = currentY + (targetY - currentY) * lerpFactor;
-      groupRef.current.position.y = newY;
+    const currentY = groupRef.current.position.y;
+    const newY = currentY + (targetY - currentY) * lerpFactor;
+    groupRef.current.position.y = newY;
 
-      const currentZ = groupRef.current.position.z;
-      const newZ = currentZ + (targetZ - currentZ) * lerpFactor;
-      groupRef.current.position.z = newZ;
+    const currentZ = groupRef.current.position.z;
+    const newZ = currentZ + (targetZ - currentZ) * lerpFactor;
+    groupRef.current.position.z = newZ;
 
       const currentRotation = groupRef.current.rotation.y;
       const newRotation = currentRotation + (targetRotation - currentRotation) * lerpFactor;
