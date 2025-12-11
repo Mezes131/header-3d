@@ -17,7 +17,7 @@ import Starfield from './Starfield';
 import NarrativeSequenceController, { useNarrativeSequence, SEQUENCE_STATES } from './NarrativeSequenceController';
 import { people, links } from '../data/family';
 import { CAMERA_CONFIG, CONTROLS_CONFIG, HEART_CENTER } from '../constants/layout';
-import { NARRATIVE_TEXTS, DEFAULT_TEXT } from '../data/narrativeTexts';
+import { NARRATIVE_TEXTS, DEFAULT_TEXT, INTRO_PHRASE_DURATION } from '../data/narrativeTexts';
 
 // Component to animate the camera
 function CameraController({ selectedPerson, isClosing, controlsRef }) {
@@ -26,8 +26,10 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
   const isAnimatingRef = useRef(false);
   const introAnimationDoneRef = useRef(false);
   const introStartTimeRef = useRef(null);
+  const currentPhraseIndexRef = useRef(-1);
+  const phraseStartTimeRef = useRef(null);
   
-  const { sequenceState, elapsedTime } = useNarrativeSequence();
+  const { sequenceState, elapsedTime, introPhraseIndex } = useNarrativeSequence();
 
   // Update camera ref when camera changes
   useEffect(() => {
@@ -40,13 +42,30 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
       introStartTimeRef.current = Date.now();
       introAnimationDoneRef.current = false;
       isAnimatingRef.current = true;
+      currentPhraseIndexRef.current = -1;
       
-      // Disable controls during intro animation
+      // Start with camera looking at empty corner (towards stars)
+      // Position camera to look at top-right corner (empty area)
+      const initialTarget = [8, 5, -8]; // Top-right corner, elevated
       if (controlsRef.current) {
+        controlsRef.current.target.set(initialTarget[0], initialTarget[1], initialTarget[2]);
         controlsRef.current.enabled = false;
+        controlsRef.current.update();
       }
+      
+      // Position camera to look towards the stars
+      const initialPosition = [-5, 4, 15]; // Offset position looking towards corner
+      cameraRef.current.position.set(initialPosition[0], initialPosition[1], initialPosition[2]);
     }
-  }, [sequenceState]);
+  }, [sequenceState, controlsRef]);
+
+  // Handle phrase changes for camera movement
+  useEffect(() => {
+    if (sequenceState === SEQUENCE_STATES.INTRO && introPhraseIndex !== undefined && introPhraseIndex !== currentPhraseIndexRef.current) {
+      currentPhraseIndexRef.current = introPhraseIndex;
+      phraseStartTimeRef.current = Date.now();
+    }
+  }, [sequenceState, introPhraseIndex]);
 
   useEffect(() => {
     if (selectedPerson && !isClosing) {
@@ -69,34 +88,54 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
   }, [selectedPerson, isClosing, controlsRef]);
 
   useFrame(() => {
-    const lerpFactor = 0.08;
+    const lerpFactor = 0.05; // Slower, smoother movement for intro
     const cam = cameraRef.current;
     
-    // Act 1: Intro camera animation (slight descent then stabilization)
+    // Act 1: Intro camera animation with phrase-based movements
     if (sequenceState === SEQUENCE_STATES.INTRO && !introAnimationDoneRef.current && introStartTimeRef.current) {
       const introElapsed = Date.now() - introStartTimeRef.current;
-      const introDuration = 2000; // 2 seconds for intro animation
+      const introDuration = 9000; // 9 seconds total (3 phrases × 3 seconds)
       
       if (introElapsed < introDuration) {
-        // Phase 1: Descent (first 1 second)
-        if (introElapsed < introDuration / 2) {
-          const progress = introElapsed / (introDuration / 2);
-          const targetY = CAMERA_CONFIG.position[1] - 0.3; // Descend by 0.3 units
-          cam.position.y += (targetY - cam.position.y) * lerpFactor;
-        } else {
-          // Phase 2: Return to initial position (second 1 second)
-          const progress = (introElapsed - introDuration / 2) / (introDuration / 2);
-          cam.position.y += (CAMERA_CONFIG.position[1] - cam.position.y) * lerpFactor;
+        // Define camera positions for each phrase
+        // Each phrase gets a smooth camera movement
+        const phraseIndex = introPhraseIndex || 0;
+        const phraseElapsed = phraseStartTimeRef.current ? Date.now() - phraseStartTimeRef.current : 0;
+        const phraseDuration = 3000; // 3 seconds per phrase
+        
+        // Camera positions for each phrase (smooth transitions)
+        let targetPosition, targetTarget;
+        
+        switch (phraseIndex) {
+          case 0: // First phrase: "Every family has a story to tell..."
+            // Start from corner (stars), slowly move towards center
+            targetPosition = [-3, 3, 18];
+            targetTarget = [4, 2, -4];
+            break;
+          case 1: // Second phrase: "A legacy woven through generations..."
+            // Move to center-left, looking at scene
+            targetPosition = [-2, 1, 19];
+            targetTarget = [0, 0.5, 0];
+            break;
+          case 2: // Third phrase: "Where memories become legends..."
+            // Move to final position, ready for reveal
+            targetPosition = CAMERA_CONFIG.position;
+            targetTarget = CONTROLS_CONFIG.target;
+            break;
+          default:
+            targetPosition = CAMERA_CONFIG.position;
+            targetTarget = CONTROLS_CONFIG.target;
         }
         
-        // Keep X and Z at initial position
-        cam.position.x += (CAMERA_CONFIG.position[0] - cam.position.x) * lerpFactor;
-        cam.position.z += (CAMERA_CONFIG.position[2] - cam.position.z) * lerpFactor;
+        // Smooth camera movement for current phrase
+        cam.position.x += (targetPosition[0] - cam.position.x) * lerpFactor;
+        cam.position.y += (targetPosition[1] - cam.position.y) * lerpFactor;
+        cam.position.z += (targetPosition[2] - cam.position.z) * lerpFactor;
         
         if (controlsRef.current) {
-          controlsRef.current.target.x += (CONTROLS_CONFIG.target[0] - controlsRef.current.target.x) * lerpFactor;
-          controlsRef.current.target.y += (CONTROLS_CONFIG.target[1] - controlsRef.current.target.y) * lerpFactor;
-          controlsRef.current.target.z += (CONTROLS_CONFIG.target[2] - controlsRef.current.target.z) * lerpFactor;
+          controlsRef.current.target.x += (targetTarget[0] - controlsRef.current.target.x) * lerpFactor;
+          controlsRef.current.target.y += (targetTarget[1] - controlsRef.current.target.y) * lerpFactor;
+          controlsRef.current.target.z += (targetTarget[2] - controlsRef.current.target.z) * lerpFactor;
           controlsRef.current.update();
         }
       } else {
@@ -104,9 +143,12 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
         introAnimationDoneRef.current = true;
         isAnimatingRef.current = false;
         
-        // Re-enable controls after intro animation
+        // Ensure final position
+        cam.position.set(CAMERA_CONFIG.position[0], CAMERA_CONFIG.position[1], CAMERA_CONFIG.position[2]);
         if (controlsRef.current) {
+          controlsRef.current.target.set(CONTROLS_CONFIG.target[0], CONTROLS_CONFIG.target[1], CONTROLS_CONFIG.target[2]);
           controlsRef.current.enabled = true;
+          controlsRef.current.update();
         }
       }
       
@@ -180,11 +222,11 @@ function CameraController({ selectedPerson, isClosing, controlsRef }) {
 }
 
 function SceneContents({ controlsRef }) {
-  const [statusText, setStatusText] = useState(NARRATIVE_TEXTS.intro);
+  const [statusText, setStatusText] = useState(Array.isArray(NARRATIVE_TEXTS.intro) ? NARRATIVE_TEXTS.intro[0] : NARRATIVE_TEXTS.intro);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [isClosing, setIsClosing] = useState(false);
   const narrativeContext = useNarrativeSequence();
-  const { sequenceState, transitionTo, elapsedTime } = narrativeContext || {};
+  const { sequenceState, transitionTo, elapsedTime, introPhraseIndex } = narrativeContext || {};
   
   // Debug logs
   useEffect(() => {
@@ -199,7 +241,15 @@ function SceneContents({ controlsRef }) {
   // Update narrative text based on sequence state
   useEffect(() => {
     if (sequenceState === SEQUENCE_STATES.INTRO) {
-      setStatusText(NARRATIVE_TEXTS.intro);
+      // Handle intro phrases array
+      if (Array.isArray(NARRATIVE_TEXTS.intro)) {
+        const phraseIndex = introPhraseIndex || 0;
+        if (phraseIndex < NARRATIVE_TEXTS.intro.length) {
+          setStatusText(NARRATIVE_TEXTS.intro[phraseIndex]);
+        }
+      } else {
+        setStatusText(NARRATIVE_TEXTS.intro);
+      }
     } else if (sequenceState === SEQUENCE_STATES.REVEAL) {
       setStatusText(NARRATIVE_TEXTS.reveal);
     } else if (sequenceState === SEQUENCE_STATES.INTERACTION) {
@@ -209,7 +259,7 @@ function SceneContents({ controlsRef }) {
     } else if (sequenceState === SEQUENCE_STATES.CONCLUSION) {
       setStatusText(NARRATIVE_TEXTS.conclusion);
     }
-  }, [sequenceState]);
+  }, [sequenceState, introPhraseIndex]);
   
   // Transition to discovery when a person is selected
   useEffect(() => {
@@ -249,7 +299,7 @@ function SceneContents({ controlsRef }) {
 
   return (
     <>
-      <color attach="background" args={['#111530']} />
+      <color attach="background" args={['#04041a']} />
       {/* Ensure background is visible from start */}
       
       {/* Starfield with slow rotation */}
@@ -423,11 +473,16 @@ export default function FamilyTreeScene() {
 
 // Wrapper component to access narrative context outside Canvas
 function NarrativeTextWrapper() {
-  const { sequenceState } = useNarrativeSequence();
+  const { sequenceState, introPhraseIndex } = useNarrativeSequence();
   
   const getNarrativeText = () => {
     switch (sequenceState) {
       case SEQUENCE_STATES.INTRO:
+        // Handle intro phrases array
+        if (Array.isArray(NARRATIVE_TEXTS.intro)) {
+          const phraseIndex = introPhraseIndex || 0;
+          return phraseIndex < NARRATIVE_TEXTS.intro.length ? NARRATIVE_TEXTS.intro[phraseIndex] : '';
+        }
         return NARRATIVE_TEXTS.intro;
       case SEQUENCE_STATES.REVEAL:
         return NARRATIVE_TEXTS.reveal;

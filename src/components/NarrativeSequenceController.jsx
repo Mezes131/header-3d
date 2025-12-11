@@ -12,7 +12,8 @@ export const SEQUENCE_STATES = {
 
 // Timing configuration for each sequence (in milliseconds)
 const SEQUENCE_TIMINGS = {
-  INTRO_DURATION: 3000,        // 3 seconds
+  INTRO_DURATION: 9000,        // 9 seconds (3 phrases × 3 seconds)
+  INTRO_PHRASE_DURATION: 3000, // 3 seconds per phrase
   REVEAL_DURATION: 3000,       // 3 seconds
   INTERACTION_DURATION: 4000,  // 4 seconds
   AUTO_TRANSITION_DELAY: 2000, // 2 seconds delay before auto-transition to conclusion
@@ -23,6 +24,7 @@ const NarrativeSequenceContext = createContext({
   sequenceState: SEQUENCE_STATES.INTRO,
   currentStep: 0,
   elapsedTime: 0,
+  introPhraseIndex: 0,
   isPaused: false,
   isReady: false,
   isLoaderComplete: false,
@@ -44,6 +46,7 @@ export const useNarrativeSequence = () => {
       sequenceState: SEQUENCE_STATES.INTRO,
       currentStep: 0,
       elapsedTime: 0,
+      introPhraseIndex: 0,
       isPaused: false,
       isReady: false,
       isLoaderComplete: false,
@@ -56,7 +59,8 @@ export const useNarrativeSequence = () => {
       getSequenceElapsedTime: () => Date.now(), // Return current time as fallback
       SEQUENCE_STATES,
       SEQUENCE_TIMINGS: {
-        INTRO_DURATION: 3000,
+        INTRO_DURATION: 9000,
+        INTRO_PHRASE_DURATION: 3000,
         REVEAL_DURATION: 3000,
         INTERACTION_DURATION: 4000,
         AUTO_TRANSITION_DELAY: 2000,
@@ -76,6 +80,7 @@ export default function NarrativeSequenceController({
   const [sequenceState, setSequenceState] = useState(SEQUENCE_STATES.INTRO);
   const [currentStep, setCurrentStep] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [introPhraseIndex, setIntroPhraseIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [isLoaderComplete, setIsLoaderComplete] = useState(false);
@@ -87,11 +92,16 @@ export default function NarrativeSequenceController({
   const sequenceStartTimeRef = useRef(null);
   const hasInitializedRef = useRef(false);
   const sequenceStateRef = useRef(SEQUENCE_STATES.INTRO); // Track current state in ref
+  const introPhraseIndexRef = useRef(0); // Track phrase index in ref
 
-  // Update ref when state changes
+  // Update refs when state changes
   useEffect(() => {
     sequenceStateRef.current = sequenceState;
   }, [sequenceState]);
+
+  useEffect(() => {
+    introPhraseIndexRef.current = introPhraseIndex;
+  }, [introPhraseIndex]);
 
   // Transition to a specific sequence state
   const transitionTo = useCallback((newState, step = 0) => {
@@ -106,10 +116,18 @@ export default function NarrativeSequenceController({
     }
 
     console.log(`[NarrativeSequenceController] Transitioning from ${sequenceStateRef.current} to ${newState} at step ${step}`);
+    const previousState = sequenceStateRef.current;
     sequenceStateRef.current = newState; // Update ref immediately
     setSequenceState(newState);
     setCurrentStep(step);
     sequenceStartTimeRef.current = Date.now();
+    
+    // Reset intro phrase index when leaving INTRO or entering INTRO
+    if (previousState === SEQUENCE_STATES.INTRO && newState !== SEQUENCE_STATES.INTRO) {
+      setIntroPhraseIndex(0);
+    } else if (newState === SEQUENCE_STATES.INTRO) {
+      setIntroPhraseIndex(0);
+    }
     
     // Call callback if provided
     if (onSequenceChange) {
@@ -120,13 +138,33 @@ export default function NarrativeSequenceController({
   // Handle automatic transitions based on elapsed time
   const handleAutoTransitions = useCallback((elapsed) => {
     const currentState = sequenceStateRef.current; // Use ref to get current state
-    if (currentState === SEQUENCE_STATES.INTRO && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION) {
-      transitionTo(SEQUENCE_STATES.REVEAL);
-    } else if (currentState === SEQUENCE_STATES.REVEAL && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION) {
-      transitionTo(SEQUENCE_STATES.INTERACTION);
-    } else if (currentState === SEQUENCE_STATES.INTERACTION && elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION + SEQUENCE_TIMINGS.INTERACTION_DURATION) {
+    
+    // Handle INTRO phrase transitions
+    if (currentState === SEQUENCE_STATES.INTRO) {
+      const phraseIndex = Math.floor(elapsed / SEQUENCE_TIMINGS.INTRO_PHRASE_DURATION);
+      // Clamp phrase index to valid range (0-2 for 3 phrases)
+      const clampedPhraseIndex = Math.min(phraseIndex, 2);
+      if (clampedPhraseIndex !== introPhraseIndexRef.current && clampedPhraseIndex >= 0) {
+        setIntroPhraseIndex(clampedPhraseIndex);
+      }
+      
+      // Transition to REVEAL after all phrases
+      if (elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION) {
+        transitionTo(SEQUENCE_STATES.REVEAL);
+        return; // Exit early to avoid checking other conditions
+      }
+    } else if (currentState === SEQUENCE_STATES.REVEAL) {
+      // Transition to INTERACTION after REVEAL duration
+      if (elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION) {
+        transitionTo(SEQUENCE_STATES.INTERACTION);
+        return;
+      }
+    } else if (currentState === SEQUENCE_STATES.INTERACTION) {
       // Auto-transition to conclusion only if no interaction happened
       // This will be handled by manual transition when user clicks
+      if (elapsed >= SEQUENCE_TIMINGS.INTRO_DURATION + SEQUENCE_TIMINGS.REVEAL_DURATION + SEQUENCE_TIMINGS.INTERACTION_DURATION) {
+        // Auto-transition logic can be added here if needed
+      }
     }
   }, [transitionTo]);
 
@@ -141,7 +179,7 @@ export default function NarrativeSequenceController({
         
         // Debug log every second
         if (Math.floor(totalElapsed / 1000) !== Math.floor((totalElapsed - 16) / 1000)) {
-          console.log(`[NarrativeSequenceController] elapsedTime: ${totalElapsed}ms, sequenceState: ${sequenceState}`);
+          console.log(`[NarrativeSequenceController] elapsedTime: ${totalElapsed}ms, sequenceState: ${sequenceStateRef.current}`);
         }
         
         // Auto-transition logic based on elapsed time
@@ -219,6 +257,7 @@ export default function NarrativeSequenceController({
     setSequenceState(SEQUENCE_STATES.INTRO);
     setCurrentStep(0);
     setElapsedTime(0);
+    setIntroPhraseIndex(0);
     setIsPaused(false);
     startTimeRef.current = Date.now();
     sequenceStartTimeRef.current = Date.now();
@@ -251,6 +290,7 @@ export default function NarrativeSequenceController({
     sequenceState,
     currentStep,
     elapsedTime,
+    introPhraseIndex,
     isPaused,
     isReady,
     isLoaderComplete,

@@ -3,7 +3,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #111530; /* Dark background matching the 3D scene */
+  background: #04041a; /* Dark background matching the 3D scene */
   color: #111530;
   overflow: hidden;
 }
