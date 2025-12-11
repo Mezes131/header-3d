@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useNarrativeSequence } from './NarrativeSequenceController';
 import '../styles/PageLoader.css';
 
-const MIN_LOADER_DURATION = 5000; // Minimum 2 seconds for loader visibility
+const MIN_LOADER_DURATION = 3000; // Minimum 2 seconds for loader visibility
 
 export default function PageLoader({ children }) {
   const [isLoading, setIsLoading] = useState(true);

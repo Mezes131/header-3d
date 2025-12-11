@@ -4,18 +4,64 @@ import { useNarrativeSequence } from './NarrativeSequenceController';
 import '../styles/NarrativeText.css';
 
 const FADE_DURATION = 500; // Duration of fade transition in milliseconds
+const INACTIVITY_TIMEOUT = 5000; // 5 seconds of inactivity before showing text again
 
 export default function NarrativeText({ text }) {
   const [displayText, setDisplayText] = useState(text);
   const [opacity, setOpacity] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isVisible, setIsVisible] = useState(true); // Visibility based on user activity
   const previousTextRef = useRef(text);
   const transitionStartTimeRef = useRef(null);
   const animationFrameRef = useRef(null);
   const mountedRef = useRef(false);
+  const inactivityTimeoutRef = useRef(null);
+  const lastInteractionTimeRef = useRef(Date.now());
 
   const narrativeContext = useNarrativeSequence();
   const getSequenceElapsedTime = narrativeContext?.getSequenceElapsedTime || (() => Date.now());
+
+  // Handle user interactions (mouse move, click, wheel)
+  useEffect(() => {
+    const handleInteraction = () => {
+      lastInteractionTimeRef.current = Date.now();
+      
+      // Hide text immediately on interaction
+      setIsVisible(false);
+      
+      // Clear existing timeout
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+      }
+      
+      // Set timeout to show text again after inactivity
+      inactivityTimeoutRef.current = setTimeout(() => {
+        setIsVisible(true);
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Add event listeners
+    window.addEventListener('mousemove', handleInteraction);
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('wheel', handleInteraction);
+
+    // Initial timeout to show text after mount (if no interaction)
+    inactivityTimeoutRef.current = setTimeout(() => {
+      setIsVisible(true);
+    }, INACTIVITY_TIMEOUT);
+
+    return () => {
+      // Cleanup event listeners
+      window.removeEventListener('mousemove', handleInteraction);
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('wheel', handleInteraction);
+      
+      // Clear timeout
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+      }
+    };
+  }, []); // Empty dependency array - only set up once on mount
 
   // Initial fade-in on mount
   useEffect(() => {
@@ -43,6 +89,7 @@ export default function NarrativeText({ text }) {
 
     const animate = () => {
       const now = Date.now();
+      let baseOpacity = 0;
       
       if (isTransitioning && transitionStartTimeRef.current) {
         const elapsed = now - transitionStartTimeRef.current;
@@ -50,7 +97,7 @@ export default function NarrativeText({ text }) {
         if (elapsed < FADE_DURATION) {
           // Fade-out phase
           const fadeProgress = elapsed / FADE_DURATION;
-          setOpacity(1 - fadeProgress);
+          baseOpacity = 1 - fadeProgress;
         } else if (elapsed < FADE_DURATION * 2) {
           // Text change happens here (mid-transition)
           if (elapsed < FADE_DURATION * 1.1 && displayText !== text) {
@@ -60,23 +107,26 @@ export default function NarrativeText({ text }) {
           
           // Fade-in phase
           const fadeProgress = (elapsed - FADE_DURATION) / FADE_DURATION;
-          setOpacity(fadeProgress);
+          baseOpacity = fadeProgress;
         } else {
           // Transition complete
-          setOpacity(1);
+          baseOpacity = 1;
           setIsTransitioning(false);
         }
       } else if (transitionStartTimeRef.current) {
         // Initial fade-in for first text
         const elapsed = now - transitionStartTimeRef.current;
         const fadeProgress = Math.min(elapsed / FADE_DURATION, 1);
-        setOpacity(fadeProgress);
+        baseOpacity = fadeProgress;
         
         if (fadeProgress >= 1) {
-          // Fade-in complete, stop animation
-          return;
+          // Fade-in complete, continue animation for visibility control
         }
       }
+      
+      // Apply visibility based on user activity
+      const finalOpacity = isVisible ? baseOpacity : 0;
+      setOpacity(finalOpacity);
       
       animationFrameRef.current = requestAnimationFrame(animate);
     };
@@ -88,7 +138,7 @@ export default function NarrativeText({ text }) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isTransitioning, text, displayText]);
+  }, [isTransitioning, text, displayText, isVisible]);
 
   return (
     <div 
