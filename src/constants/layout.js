@@ -22,9 +22,9 @@ export const CAMERA_CONFIG = {
 };
 
 export const CONTROLS_CONFIG = {
-  minDistance: 5,
-  maxDistance: 30,
-  enablePan: false,
+  minDistance: 3,
+  maxDistance: 80,
+  enablePan: true,
   target: [0, 0.3, 0],
 };
 

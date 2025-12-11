@@ -4,7 +4,7 @@ import { useNarrativeSequence } from './NarrativeSequenceController';
 import '../styles/NarrativeText.css';
 
 const FADE_DURATION = 500; // Duration of fade transition in milliseconds
-const INACTIVITY_TIMEOUT = 3000; // 5 seconds of inactivity before showing text again
+const INACTIVITY_TIMEOUT = 3000; // 3 seconds of inactivity before showing text again
 
 export default function NarrativeText({ text }) {
   const [displayText, setDisplayText] = useState(text);

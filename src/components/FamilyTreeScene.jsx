@@ -228,12 +228,12 @@ function SceneContents({ controlsRef }) {
         // Disable zoom/unzoom when CardView is open
         controlsRef.current.enableZoom = false;
         controlsRef.current.enableRotate = true;
-        controlsRef.current.enablePan = false;
+        controlsRef.current.enablePan = true;
       } else {
         // Re-enable controls when CardView is closed
         controlsRef.current.enableZoom = true;
         controlsRef.current.enableRotate = true;
-        controlsRef.current.enablePan = false; // enablePan is always false according to CONTROLS_CONFIG
+        controlsRef.current.enablePan = true;
       }
     }
   }, [selectedPerson, controlsRef]);
